@@ -1,10 +1,22 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircleIcon, ArrowRightIcon } from '@heroicons/react/24/solid';
+import { propertyService } from '../services/propertyService';
 
 function Services() {
   const [selectedService, setSelectedService] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({
+    service_type: '',
+    name: '',
+    phone_number: '',
+    preferred_date: '',
+    preferred_time: '',
+    service_address: '',
+    additional_notes: ''
+  });
 
   const services = [
     {
@@ -61,6 +73,108 @@ function Services() {
   const handleServiceSelect = (service) => {
     setSelectedService(service);
     setShowForm(true);
+    setFormData(prev => ({ ...prev, service_type: '' }));
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setError(''); // Clear error when user makes changes
+  };
+
+  const validateForm = () => {
+    // Service type validation
+    if (!formData.service_type || formData.service_type.trim() === '') {
+      setError('Please select a service type');
+      return false;
+    }
+
+    // Name validation (at least 2 words, minimum 3 characters each)
+    const nameWords = formData.name.trim().split(/\s+/);
+    if (nameWords.length < 2 || nameWords.some(word => word.length < 3)) {
+      setError('Please enter your full name (first and last name)');
+      return false;
+    }
+
+    // Phone number validation (international format)
+    const phoneRegex = /^\+?[1-9]\d{9,11}$/;
+    if (!phoneRegex.test(formData.phone_number.replace(/\s+/g, ''))) {
+      setError('Please enter a valid phone number (+XX XXXXXXXXXX)');
+      return false;
+    }
+
+    // Date validation
+    const selectedDate = new Date(formData.preferred_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) {
+      setError('Please select a future date');
+      return false;
+    }
+
+    // Time validation (HH:MM format and within business hours 9 AM to 6 PM)
+    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(formData.preferred_time)) {
+      setError('Time must be in HH:MM format');
+      return false;
+    }
+
+    const [hours, minutes] = formData.preferred_time.split(':').map(Number);
+    if (hours < 9 || (hours === 18 && minutes > 0) || hours > 18) {
+      setError('Please select a time between 9:00 AM and 6:00 PM');
+      return false;
+    }
+
+    // Address validation (minimum length)
+    if (formData.service_address.trim().length < 10) {
+      setError('Please enter a complete service address');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    if (!validateForm()) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Format the date to match the API's expected format
+      const formattedDate = new Date(formData.preferred_date).toISOString();
+
+      const bookingData = {
+        ...formData,
+        preferred_date: formattedDate,
+        service_type: formData.service_type.toLowerCase().replace(/\s+/g, '_')
+      };
+
+      console.log('Submitting service booking:', bookingData);
+      
+      await propertyService.submitServiceBooking(bookingData);
+      console.log('Service booking request submitted successfully!');
+      setShowForm(false);
+      setFormData({
+        service_type: '',
+        name: '',
+        phone_number: '',
+        preferred_date: '',
+        preferred_time: '',
+        service_address: '',
+        additional_notes: ''
+      });
+    } catch (error) {
+      console.error('Service booking error:', error);
+      setError(error.message || 'Failed to submit service booking request');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -156,18 +270,30 @@ function Services() {
                   </h2>
                 </div>
 
-                <form className="space-y-6">
+                {error && (
+                  <div className="p-4 bg-red-50 text-red-600 rounded-lg mb-6">
+                    {error}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Service Type */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Service Type
                     </label>
-                    <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet">
+                    <select
+                      name="service_type"
+                      value={formData.service_type}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet"
+                    >
                       <option value="">Select a service type</option>
                       {selectedService.subCategories.map((subCategory, index) => (
                         <option 
                           key={index} 
-                          value={typeof subCategory === 'string' ? subCategory : subCategory.name}
+                          value={typeof subCategory === 'string' ? subCategory.toLowerCase() : subCategory.name.toLowerCase()}
                         >
                           {typeof subCategory === 'string' ? subCategory : subCategory.name}
                         </option>
@@ -183,6 +309,10 @@ function Services() {
                       </label>
                       <input
                         type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        required
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet"
                         placeholder="Your name"
                       />
@@ -193,6 +323,10 @@ function Services() {
                       </label>
                       <input
                         type="tel"
+                        name="phone_number"
+                        value={formData.phone_number}
+                        onChange={handleInputChange}
+                        required
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet"
                         placeholder="Your phone number"
                       />
@@ -207,20 +341,27 @@ function Services() {
                       </label>
                       <input
                         type="date"
+                        name="preferred_date"
+                        value={formData.preferred_date}
+                        onChange={handleInputChange}
+                        required
                         min={new Date().toISOString().split('T')[0]}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Preferred Time
+                        Preferred Time (HH:MM)
                       </label>
-                      <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet">
-                        <option value="">Select time slot</option>
-                        <option value="morning">Morning (9 AM - 12 PM)</option>
-                        <option value="afternoon">Afternoon (12 PM - 3 PM)</option>
-                        <option value="evening">Evening (3 PM - 6 PM)</option>
-                      </select>
+                      <input
+                        type="time"
+                        name="preferred_time"
+                        value={formData.preferred_time}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet"
+                        placeholder="HH:MM"
+                      />
                     </div>
                   </div>
 
@@ -230,6 +371,10 @@ function Services() {
                       Service Address
                     </label>
                     <textarea
+                      name="service_address"
+                      value={formData.service_address}
+                      onChange={handleInputChange}
+                      required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet"
                       rows="3"
                       placeholder="Enter your address"
@@ -242,6 +387,9 @@ function Services() {
                       Additional Notes
                     </label>
                     <textarea
+                      name="additional_notes"
+                      value={formData.additional_notes}
+                      onChange={handleInputChange}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet"
                       rows="3"
                       placeholder="Any specific requirements or notes"
@@ -251,9 +399,12 @@ function Services() {
                   {/* Submit Button */}
                   <button
                     type="submit"
-                    className="w-full bg-brand-violet text-white py-3 rounded-lg hover:bg-brand-violet/90 transition-colors"
+                    disabled={loading}
+                    className={`w-full bg-brand-violet text-white py-3 rounded-lg transition-colors ${
+                      loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-brand-violet/90'
+                    }`}
                   >
-                    Request Service
+                    {loading ? 'Submitting...' : 'Request Service'}
                   </button>
                 </form>
               </div>

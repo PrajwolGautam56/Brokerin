@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MapPinIcon, PhoneIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
+import { propertyService } from '../services/propertyService';
 
 function Contact() {
   const [formData, setFormData] = useState({
@@ -9,11 +10,40 @@ function Contact() {
     subject: '',
     message: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission
-    console.log(formData);
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    // Validate phone number format
+    const phoneRegex = /^\+?[1-9]\d{9,11}$/;
+    if (formData.phone && !phoneRegex.test(formData.phone.replace(/\s+/g, ''))) {
+      setError('Please enter a valid phone number');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await propertyService.submitContactForm(formData);
+      setSuccess('Thank you for your message. We will get back to you soon!');
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        subject: '',
+        message: ''
+      });
+    } catch (err) {
+      setError(err.message || 'Failed to send message. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -72,6 +102,19 @@ function Contact() {
           {/* Contact Form */}
           <div className="bg-white rounded-xl shadow-lg p-8">
             <h2 className="text-2xl font-semibold mb-6">Send us a Message</h2>
+            
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-lg">
+                {error}
+              </div>
+            )}
+            
+            {success && (
+              <div className="mb-6 p-4 bg-green-50 text-green-600 rounded-lg">
+                {success}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -83,6 +126,7 @@ function Contact() {
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-violet-500 focus:border-violet-500"
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -97,6 +141,7 @@ function Contact() {
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-violet-500 focus:border-violet-500"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div>
@@ -108,6 +153,8 @@ function Contact() {
                     value={formData.phone}
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-violet-500 focus:border-violet-500"
+                    placeholder="+91XXXXXXXXXX"
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -122,6 +169,7 @@ function Contact() {
                   onChange={(e) => setFormData({...formData, subject: e.target.value})}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-violet-500 focus:border-violet-500"
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -135,14 +183,18 @@ function Contact() {
                   onChange={(e) => setFormData({...formData, message: e.target.value})}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-violet-500 focus:border-violet-500"
                   required
+                  disabled={loading}
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-violet-500 text-white py-3 rounded-lg hover:bg-violet-600 transition-colors"
+                disabled={loading}
+                className={`w-full bg-violet-500 text-white py-3 rounded-lg transition-colors ${
+                  loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-violet-600'
+                }`}
               >
-                Send Message
+                {loading ? 'Sending...' : 'Send Message'}
               </button>
             </form>
           </div>

@@ -15,64 +15,42 @@ const furnitureData = [
 ];
 
 function Furniture() {
-  const [selectedTab, setSelectedTab] = useState('buy');
-
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold mb-8">Furniture Collection</h1>
-
-        <Tab.Group>
-          <Tab.List className="flex space-x-4 border-b border-gray-200 mb-8">
-            <Tab
-              className={({ selected }) =>
-                `py-2 px-4 text-sm font-medium border-b-2 ${
-                  selected
-                    ? 'border-violet-500 text-violet-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`
-              }
-            >
-              Buy
-            </Tab>
-            <Tab
-              className={({ selected }) =>
-                `py-2 px-4 text-sm font-medium border-b-2 ${
-                  selected
-                    ? 'border-violet-500 text-violet-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`
-              }
-            >
-              Rent
-            </Tab>
-          </Tab.List>
-
-          <Tab.Panels>
-            <Tab.Panel>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {furnitureData.map(item => (
-                  <FurnitureCard 
-                    key={item.id} 
-                    furniture={item} 
-                    mode="buy" 
-                  />
-                ))}
-              </div>
-            </Tab.Panel>
-            <Tab.Panel>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {furnitureData.map(item => (
-                  <FurnitureCard 
-                    key={item.id} 
-                    furniture={item} 
-                    mode="rent" 
-                  />
-                ))}
-              </div>
-            </Tab.Panel>
-          </Tab.Panels>
-        </Tab.Group>
+    <div className="min-h-screen bg-gray-50 pt-32">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">
+            Furniture Store
+          </h1>
+          <div className="bg-white rounded-xl shadow-lg p-8 max-w-2xl mx-auto">
+            <div className="flex flex-col items-center">
+              <svg
+                className="w-24 h-24 text-violet-500 mb-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                />
+              </svg>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                Coming Soon!
+              </h2>
+              <p className="text-gray-600 text-center mb-6">
+                We're working hard to bring you a great selection of furniture for your home.
+                This feature will be available soon.
+              </p>
+              <p className="text-sm text-gray-500">
+                Stay tuned for updates on our furniture collection!
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

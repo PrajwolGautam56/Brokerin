@@ -19,8 +19,8 @@ import ScrollToTop from './components/common/ScrollToTop';
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
+    <AuthProvider>
+      <Router>
         <ErrorBoundary>
           <div className="App">
             <ScrollToTop />
@@ -41,8 +41,8 @@ function App() {
             <Footer />
           </div>
         </ErrorBoundary>
-      </AuthProvider>
-    </Router>
+      </Router>
+    </AuthProvider>
   );
 }
 
