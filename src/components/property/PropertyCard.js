@@ -10,7 +10,9 @@ function PropertyCard({ property }) {
   }
 
   const amenities = property.amenities?.length > 0 
-    ? propertyService.formatAmenities(property.amenities[0]) 
+    ? propertyService.formatAmenities(property.amenities[0]).map(amenity => 
+        amenity.trim().toUpperCase()
+      )
     : [];
     
   const imageUrl = property.photos?.length > 0 && !imageLoadFailed
@@ -18,6 +20,19 @@ function PropertyCard({ property }) {
     : null;
 
   const propertyName = property.name ? property.name.replace(/"/g, '') : 'Property Name Not Available';
+
+  // Function to get random background color from theme palette
+  const getRandomBgColor = () => {
+    const colors = [
+      'bg-violet-100',
+      'bg-violet-200',
+      'bg-purple-100',
+      'bg-purple-200',
+      'bg-indigo-100',
+      'bg-indigo-200'
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
 
   return (
     <Link 
@@ -86,13 +101,13 @@ function PropertyCard({ property }) {
                 {amenities.slice(0, 3).map((amenity, index) => (
                   <span 
                     key={index}
-                    className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-xs"
+                    className={`${getRandomBgColor()} text-violet-800 px-2 py-1 rounded-md text-xs font-medium`}
                   >
-                    {amenity.trim()}
+                    {amenity}
                   </span>
                 ))}
                 {amenities.length > 3 && (
-                  <span className="text-gray-500 text-xs">+{amenities.length - 3} more</span>
+                  <span className="text-violet-600 text-xs font-medium">+{amenities.length - 3} more</span>
                 )}
               </>
             ) : (

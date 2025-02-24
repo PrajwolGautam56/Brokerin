@@ -164,6 +164,18 @@ function PropertyDetails() {
     }
   };
 
+  const getRandomBgColor = () => {
+    const colors = [
+      'bg-violet-100',
+      'bg-violet-200',
+      'bg-purple-100',
+      'bg-purple-200',
+      'bg-indigo-100',
+      'bg-indigo-200'
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -265,9 +277,13 @@ function PropertyDetails() {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {property.amenities?.length > 0 ? (
                   property.amenities.map((amenity, index) => (
-                    <div key={index} className="flex items-center text-gray-600">
-                      <HomeIcon className="h-5 w-5 mr-2 text-violet-600" />
-                      <span>{amenity}</span>
+                    <div 
+                      key={index} 
+                      className={`${getRandomBgColor()} rounded-lg p-3 flex items-center justify-center text-center`}
+                    >
+                      <span className="text-violet-800 font-medium">
+                        {amenity.trim().toUpperCase()}
+                      </span>
                     </div>
                   ))
                 ) : (
