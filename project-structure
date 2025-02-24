@@ -1,0 +1,25 @@
+src/
+├── components/
+│   ├── common/
+│   │   ├── Navbar.js
+│   │   ├── Footer.js
+│   │   └── Button.js
+│   ├── home/
+│   │   ├── Hero.js
+│   │   ├── PropertyList.js
+│   │   └── ServiceSection.js
+│   ├── property/
+│   │   ├── PropertyCard.js
+│   │   └── PropertyDetails.js
+│   ├── services/
+│   │   ├── ServiceCard.js
+│   │   └── ServiceRequest.js
+│   └── furniture/
+│       ├── FurnitureList.js
+│       └── FurnitureCard.js
+├── pages/
+│   ├── Home.js
+│   ├── Properties.js
+│   ├── Services.js
+│   └── Furniture.js
+└── App.js 
