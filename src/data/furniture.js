@@ -11,7 +11,7 @@ export const furnitureData = [
       "Premium Fabric",
       "High-Density Foam",
       "Solid Wood Frame",
-      "5 Year Warranty"
+      "5 Year Warrant"
     ],
     dimensions: {
       length: "290 cm",
