@@ -56,8 +56,8 @@ function Hero() {
   };
 
   return (
-    <div className="pt-32 pb-16 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-col lg:flex-row items-start gap-16">
           {/* Left Side */}
           <div className="lg:w-1/2">
