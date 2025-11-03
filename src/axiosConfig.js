@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with configuration
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL,
+  baseURL: process.env.REACT_APP_API_BASE_URL || 'https://backend-brokerin-production.up.railway.app',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
@@ -55,12 +55,14 @@ api.interceptors.response.use(
       console.error('API Error Response:', {
         status: error.response.status,
         data: error.response.data,
-        headers: error.response.headers
+        headers: error.response.headers,
+        url: error.response.config.url,
+        method: error.response.config.method
       });
 
+      // Handle specific error cases
       switch (error.response.status) {
         case 401:
-          // Handle unauthorized
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           if (window.location.pathname !== '/login') {

@@ -50,14 +50,14 @@ export default function FeaturedProperties() {
           <p className="text-lg text-gray-600">Discover our hand-picked properties for you</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {properties.map((property) => (
             <Link 
               key={property._id} 
               to={`/property/${property._id}`}
-              className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+              className="block bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
             >
-              <div className="relative h-48">
+              <div className="relative h-48 sm:h-56">
                 {property.photos && property.photos.length > 0 ? (
                   <img
                     src={propertyService.getImageUrl(property.photos[0])}
@@ -75,34 +75,34 @@ export default function FeaturedProperties() {
                   </div>
                 )}
                 <div className="absolute top-4 right-4">
-                  <span className="bg-violet-100 text-violet-600 px-3 py-1 rounded-full text-sm">
+                  <span className="bg-violet-100 text-violet-600 px-3 py-1 rounded-full text-sm font-medium">
                     {property.listing_type}
                   </span>
                 </div>
               </div>
 
               <div className="p-6">
-                <h3 className="font-semibold text-xl text-gray-900 mb-2">
+                <h3 className="font-semibold text-xl text-gray-900 mb-2 line-clamp-1">
                   {property.name || 'Unnamed Property'}
                 </h3>
-                <p className="text-gray-600 mb-4">{property.location}</p>
+                <p className="text-gray-600 mb-4 line-clamp-1">{property.location}</p>
                 
-                <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-4">
                   <span>{property.bhk} BHK</span>
                   <span>{property.bathrooms} Bath</span>
                   <span>{property.carpet_area} sq.ft</span>
                 </div>
 
-                <div className="flex justify-between items-center">
-                  <div>
-                    <span className="text-sm text-gray-500">Price</span>
-                    <p className="font-semibold text-lg">
+                <div className="flex flex-wrap justify-between items-center gap-2">
+                  <div className="flex-shrink-0">
+                    <span className="text-sm text-gray-500 block">Price</span>
+                    <p className="font-semibold text-lg whitespace-nowrap">
                       {property.listing_type === 'Rent'
                         ? `₹${property.price?.rent_monthly?.toLocaleString()}/month`
                         : `₹${property.price?.sell_price?.toLocaleString()}`}
                     </p>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-sm ${
+                  <span className={`px-3 py-1 rounded-full text-sm flex-shrink-0 ${
                     property.status === 'Available' 
                       ? 'bg-green-100 text-green-600'
                       : 'bg-red-100 text-red-600'

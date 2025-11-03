@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -12,6 +13,9 @@ function Login() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Get the return URL from location state or default to home
+  const from = location.state?.from?.pathname || '/';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,19 +30,17 @@ function Login() {
     }
 
     try {
-      console.log('Submitting login form:', { email: formData.email, hasPassword: !!formData.password });
-      
       const response = await authService.login(formData);
-      console.log('Login successful:', response);
       
       if (response.user) {
         login(response.user);
         
-        // Redirect based on user role
-        if (response.user.role?.type === 'admin') {
+        // Check if user is admin
+        const isAdmin = await authService.checkAdmin();
+        if (isAdmin) {
           navigate('/admin');
         } else {
-          navigate('/');
+          navigate(from);
         }
       } else {
         throw new Error('Invalid response format');

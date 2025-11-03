@@ -1,23 +1,34 @@
 import api from '../axiosConfig';
 
+// Test credentials - REMOVE IN PRODUCTION
+const TEST_ADMIN = {
+  email: 'admin@brokerin.com',
+  password: 'admin123'
+};
+
 export const authService = {
   login: async (credentials) => {
     try {
-      // Log the full request details
-      console.log('Making login request to:', `${process.env.REACT_APP_API_BASE_URL}/api/auth/signin`);
-      console.log('Request payload:', {
-        identifier: credentials.email,
-        password: credentials.password
-      });
+      // For test admin account, bypass API call
+      if (credentials.email === TEST_ADMIN.email && credentials.password === TEST_ADMIN.password) {
+        const mockResponse = {
+          user: {
+            id: 'admin-123',
+            email: TEST_ADMIN.email,
+            name: 'Admin User',
+            role: 'admin'
+          },
+          token: 'test-admin-token'
+        };
+        localStorage.setItem('token', mockResponse.token);
+        localStorage.setItem('user', JSON.stringify(mockResponse.user));
+        return mockResponse;
+      }
 
+      // Regular API login
       const response = await api.post('/api/auth/signin', {
         identifier: credentials.email,
         password: credentials.password
-      });
-
-      console.log('Login response:', {
-        status: response.status,
-        data: response.data
       });
 
       if (response.data.token) {
@@ -40,26 +51,16 @@ export const authService = {
 
   signup: async (userData) => {
     try {
-      console.log('Making signup request to:', `${process.env.REACT_APP_API_BASE_URL}/api/auth/signup`);
-      
-      // Format the request body according to API requirements
       const signupData = {
         fullName: userData.fullName,
-        username: userData.fullName.toLowerCase().replace(/\s+/g, ''), // Create username from fullName
+        username: userData.fullName.toLowerCase().replace(/\s+/g, ''),
         email: userData.email,
         phoneNumber: userData.phoneNumber,
-        nationality: "IN", // Default to IN
+        nationality: "IN",
         password: userData.password
       };
 
-      console.log('Signup payload:', signupData);
-
       const response = await api.post('/api/auth/signup', signupData);
-
-      console.log('Signup response:', {
-        status: response.status,
-        data: response.data
-      });
 
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
@@ -93,6 +94,28 @@ export const authService = {
   },
 
   isAuthenticated: () => {
-    return !!localStorage.getItem('token');
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    return !!token && !!user;
+  },
+
+  checkAdmin: async () => {
+    try {
+      const response = await api.get('/api/auth/check-admin');
+      return response.data.isAdmin;
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      return false;
+    }
+  },
+
+  isAdmin: async (user) => {
+    try {
+      const isAdmin = await authService.checkAdmin();
+      return isAdmin;
+    } catch (error) {
+      console.error('Error in isAdmin check:', error);
+      return false;
+    }
   }
 }; 
