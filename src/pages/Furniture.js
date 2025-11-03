@@ -1,97 +1,99 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Tab } from '@headlessui/react';
 import { furnitureService } from '../services/furnitureService';
 import { XMarkIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 
-const furnitureData = [
-  {
-    id: 1,
-    name: "Modern L-Shaped Sofa Set",
-    price: "₹45,999",
-    rentPrice: "₹2,499/month",
-    image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    category: "Living Room",
-    description: "Contemporary 6-seater L-shaped sofa with premium fabric upholstery",
-    features: ["Premium Fabric", "High-Density Foam", "Solid Wood Frame", "5 Year Warranty"]
-  },
-  {
-    id: 2,
-    name: "Queen Size Bed with Storage",
-    price: "₹32,999",
-    rentPrice: "₹1,899/month",
-    image: "https://images.unsplash.com/photo-1505693314120-0d443867891c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    category: "Bedroom",
-    description: "Modern queen size bed with hydraulic storage and premium mattress",
-    features: ["Hydraulic Storage", "Engineered Wood", "Premium Finish", "3 Year Warranty"]
-  },
-  {
-    id: 3,
-    name: "6-Seater Dining Set",
-    price: "₹28,999",
-    rentPrice: "₹1,699/month",
-    image: "https://images.unsplash.com/photo-1617806118233-18e1de247200?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    category: "Dining Room",
-    description: "Contemporary dining set with glass top and comfortable chairs",
-    features: ["Tempered Glass Top", "Cushioned Chairs", "Powder Coated Frame", "2 Year Warranty"]
-  },
-  {
-    id: 4,
-    name: "TV Entertainment Unit",
-    price: "₹18,999",
-    rentPrice: "₹999/month",
-    image: "https://images.unsplash.com/photo-1588046130717-0eb0c9a3ba15?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    category: "Living Room",
-    description: "Modern TV unit with ample storage and sleek design",
-    features: ["Wall Mounted", "Multiple Compartments", "Back Panel for TV", "2 Year Warranty"]
-  },
-  {
-    id: 5,
-    name: "Study Table with Bookshelf",
-    price: "₹12,999",
-    rentPrice: "₹799/month",
-    image: "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    category: "Study Room",
-    description: "Compact study table with integrated bookshelf and drawer",
-    features: ["Multiple Storage", "Cable Management", "Ergonomic Design", "1 Year Warranty"]
-  },
-  {
-    id: 6,
-    name: "Premium Washing Machine",
-    price: "₹35,999",
-    rentPrice: "₹1,499/month",
-    image: "https://images.unsplash.com/photo-1626806787461-7e32501b5ef8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    category: "Appliances",
-    description: "Fully automatic washing machine with advanced features",
-    features: ["Fully Automatic", "Energy Efficient", "Multiple Wash Programs", "2 Year Warranty"]
-  },
-  {
-    id: 7,
-    name: "Double Door Refrigerator",
-    price: "₹42,999",
-    rentPrice: "₹2,299/month",
-    image: "https://images.unsplash.com/photo-1571175443880-49e1d0b7b4d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    category: "Appliances",
-    description: "Large capacity refrigerator with advanced cooling technology",
-    features: ["350L Capacity", "Frost Free", "Digital Display", "3 Year Warranty"]
-  },
-  {
-    id: 8,
-    name: "55-inch Smart LED TV",
-    price: "₹69,999",
-    rentPrice: "₹2,999/month",
-    image: "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    category: "Appliances",
-    description: "Ultra HD Smart TV with built-in Android and voice control",
-    features: ["4K UHD", "Smart TV", "Voice Control", "2 Year Warranty"]
-  }
-];
-
 function Furniture() {
-  const [selectedTab, setSelectedTab] = useState('buy');
-  const [loading, setLoading] = useState(false);
+  const [selectedTab, setSelectedTab] = useState('rent');
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [furnitureItems, setFurnitureItems] = useState([]);
+  const [filters, setFilters] = useState({
+    category: '',
+    listingType: '',
+    page: 1,
+    limit: 12
+  });
+
+  useEffect(() => {
+    fetchFurniture();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, selectedTab]);
+
+  const fetchFurniture = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Build query params - use API filtering based on selected tab
+      const queryParams = {
+        status: 'Available', // Only show available items
+        page: filters.page,
+        limit: 100 // Get more items to ensure we see them all
+      };
+      
+      // Note: The API might not support listingType filter, so we'll filter client-side
+      // Try to get both types and filter based on what the API returns
+      
+      // Add category filter if selected
+      if (filters.category) {
+        queryParams.category = filters.category;
+      }
+      
+      console.log('Fetching furniture with filters:', queryParams);
+      console.log('Current tab:', selectedTab);
+      const data = await furnitureService.getAllFurniture(queryParams);
+      console.log('Furniture response:', data);
+      
+      // Handle different response formats
+      let furnitureData = [];
+      if (data.furniture && Array.isArray(data.furniture)) {
+        furnitureData = data.furniture;
+      } else if (data.data && Array.isArray(data.data)) {
+        furnitureData = data.data;
+      } else if (Array.isArray(data)) {
+        furnitureData = data;
+      }
+      
+      console.log('Filtered furniture from API:', furnitureData);
+      console.log('Item count before filtering:', furnitureData.length);
+      
+      // Filter by listingType and ensure price exists
+      if (selectedTab === 'rent') {
+        furnitureData = furnitureData.filter(item => {
+          const listingType = item.listingType || item.listing_type;
+          const isRentOrBoth = listingType === 'Rent' || listingType === 'Rent & Sell';
+          const hasRentPrice = !!item.price?.rent_monthly;
+          console.log(`Item: ${item.name}, listingType: ${listingType}, isRentOrBoth: ${isRentOrBoth}, hasRentPrice: ${hasRentPrice}`);
+          return isRentOrBoth && hasRentPrice;
+        });
+      } else if (selectedTab === 'buy') {
+        furnitureData = furnitureData.filter(item => {
+          const listingType = item.listingType || item.listing_type;
+          const isSellOrBoth = listingType === 'Sell' || listingType === 'Rent & Sell';
+          const hasSellPrice = !!item.price?.sell_price;
+          return isSellOrBoth && hasSellPrice;
+        });
+      }
+      
+      console.log('After filtering by listingType:', furnitureData);
+      console.log('Item count after filtering:', furnitureData.length);
+      
+      setFurnitureItems(furnitureData);
+      
+      if (furnitureData.length === 0) {
+        setError('No furniture items found. Please check back later.');
+      }
+    } catch (err) {
+      console.error('Error fetching furniture:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to load furniture items.');
+      setFurnitureItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -116,7 +118,12 @@ function Furniture() {
           </div>
         )}
 
-        <Tab.Group>
+        <Tab.Group selectedIndex={selectedTab === 'rent' ? 1 : 0} onChange={(index) => {
+          console.log('Tab changed to index:', index);
+          const newTab = index === 1 ? 'rent' : 'buy';
+          console.log('Setting selectedTab to:', newTab);
+          setSelectedTab(newTab);
+        }}>
           <Tab.List className="flex space-x-4 border-b border-gray-200 mb-8">
             <Tab
               className={({ selected }) =>
@@ -144,30 +151,46 @@ function Furniture() {
 
           <Tab.Panels>
             <Tab.Panel>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {furnitureData.map(item => (
-                  <FurnitureCard 
-                    key={item.id} 
-                    furniture={item} 
-                    mode="buy"
-                    setError={setError}
-                    setSuccess={setSuccess}
-                  />
-                ))}
-              </div>
+              {loading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-violet-500"></div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {furnitureItems
+                    .filter(item => selectedTab === 'buy' ? true : true) // Can filter by availability
+                    .map(item => (
+                      <FurnitureCard 
+                        key={item.id || item._id} 
+                        furniture={item} 
+                        mode="buy"
+                        setError={setError}
+                        setSuccess={setSuccess}
+                      />
+                    ))}
+                </div>
+              )}
             </Tab.Panel>
             <Tab.Panel>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {furnitureData.map(item => (
-                  <FurnitureCard 
-                    key={item.id} 
-                    furniture={item} 
-                    mode="rent"
-                    setError={setError}
-                    setSuccess={setSuccess}
-                  />
-                ))}
-              </div>
+              {loading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-violet-500"></div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {furnitureItems
+                    .filter(item => selectedTab === 'rent' ? true : true) // Can filter by availability
+                    .map(item => (
+                      <FurnitureCard 
+                        key={item.id || item._id} 
+                        furniture={item} 
+                        mode="rent"
+                        setError={setError}
+                        setSuccess={setSuccess}
+                      />
+                    ))}
+                </div>
+              )}
             </Tab.Panel>
           </Tab.Panels>
         </Tab.Group>
@@ -187,7 +210,7 @@ function FurnitureCard({ furniture, mode, setError, setSuccess }) {
       >
         <div className="relative h-64">
           <img 
-            src={furniture.image} 
+            src={furniture.photos && furniture.photos.length > 0 ? furniture.photos[0] : furniture.image || 'https://via.placeholder.com/400x300/cccccc/969696?text=No+Image'} 
             alt={furniture.name}
             className="w-full h-full object-cover"
             onError={(e) => {
@@ -199,22 +222,66 @@ function FurnitureCard({ furniture, mode, setError, setSuccess }) {
               {furniture.category}
             </span>
           </div>
+          {furniture.brand && (
+            <div className="absolute top-4 right-4">
+              <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">
+                {furniture.brand}
+              </span>
+            </div>
+          )}
         </div>
         <div className="p-6">
           <h3 className="text-xl font-semibold text-gray-900 mb-2">{furniture.name}</h3>
-          <p className="text-gray-600 text-sm mb-3">{furniture.description}</p>
+          <p className="text-gray-600 text-sm mb-1">{furniture.item_type || furniture.category}</p>
+          {furniture.condition && (
+            <p className="text-gray-500 text-xs mb-2">Condition: {furniture.condition}</p>
+          )}
+          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{furniture.description}</p>
           
           <div className="flex flex-wrap gap-2 mb-4">
-            {furniture.features.slice(0, 2).map((feature, idx) => (
+            {furniture.features && furniture.features.length > 0 ? furniture.features.slice(0, 2).map((feature, idx) => (
               <span key={idx} className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
                 {feature}
               </span>
-            ))}
+            )) : furniture.condition && (
+              <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
+                {furniture.condition}
+              </span>
+            )}
           </div>
           
-          <p className="text-violet-600 font-bold text-2xl mb-4">
-            {mode === 'buy' ? furniture.price : furniture.rentPrice}
-          </p>
+          <div className="mb-4">
+            {/* Show price based on listing type and current mode */}
+            {(furniture.listingType || furniture.listing_type) === 'Rent & Sell' ? (
+              <div>
+                <p className="text-violet-600 font-bold text-2xl">
+                  {mode === 'buy' 
+                    ? (furniture.price?.sell_price ? `₹${furniture.price.sell_price}` : 'Price on request')
+                    : (furniture.price?.rent_monthly ? `₹${furniture.price.rent_monthly}/month` : 'Price on request')
+                  }
+                </p>
+                {mode === 'buy' && furniture.price?.sell_price && furniture.price?.rent_monthly && (
+                  <p className="text-xs text-gray-500 mt-1">Also available for rent: ₹{furniture.price.rent_monthly}/month</p>
+                )}
+                {mode === 'rent' && furniture.price?.rent_monthly && furniture.price?.sell_price && (
+                  <p className="text-xs text-gray-500 mt-1">Or buy for: ₹{furniture.price.sell_price}</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-violet-600 font-bold text-2xl">
+                {mode === 'buy' 
+                  ? (furniture.price?.sell_price ? `₹${furniture.price.sell_price}` : 'Price on request')
+                  : (furniture.price?.rent_monthly ? `₹${furniture.price.rent_monthly}/month` : 'Price on request')
+                }
+              </p>
+            )}
+            {mode === 'rent' && furniture.price?.deposit && (
+              <p className="text-sm text-gray-600">+ ₹{furniture.price.deposit} deposit</p>
+            )}
+            {furniture.delivery_available && (
+              <p className="text-xs text-green-600 mt-1">✓ Delivery Available</p>
+            )}
+          </div>
           
           <button
             onClick={() => setShowModal(true)}
@@ -239,6 +306,7 @@ function FurnitureCard({ furniture, mode, setError, setSuccess }) {
 }
 
 function RequestModal({ furniture, mode, onClose, setError, setSuccess }) {
+  const { user, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -251,6 +319,19 @@ function RequestModal({ furniture, mode, onClose, setError, setSuccess }) {
   });
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    // If logged in, prefill from user and lock those fields
+    if (isAuthenticated && isAuthenticated() && user) {
+      setFormData((prev) => ({
+        ...prev,
+        name: user.fullName || user.name || '',
+        email: user.email || '',
+        phone: user.phoneNumber || user.phone || ''
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -258,12 +339,27 @@ function RequestModal({ furniture, mode, onClose, setError, setSuccess }) {
     setLoading(true);
 
     try {
+      // Use furniture_id if available (from API), otherwise fall back to id
+      const furnitureId = furniture.furniture_id || furniture._id || furniture.id;
+      
+      console.log('Submitting furniture request with ID:', furnitureId);
+      
+      // Validate required fields when user details missing
+      const effectivePhone = formData.phone || user?.phoneNumber || user?.phone || '';
+      if (!effectivePhone) {
+        setError('Phone number is required');
+        setLoading(false);
+        return;
+      }
+
       await furnitureService.submitFurnitureRequest({
-        furniture_id: furniture.id,
+        furniture_id: furnitureId,
         type: mode,
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
+        // If user is logged in, use account details
+        userId: user?.id || user?._id,
+        name: formData.name || user?.fullName || user?.name,
+        email: formData.email || user?.email,
+        phone: effectivePhone,
         address: formData.address,
         duration: formData.duration,
         message: formData.message,
@@ -319,6 +415,7 @@ function RequestModal({ furniture, mode, onClose, setError, setSuccess }) {
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                disabled={(isAuthenticated && isAuthenticated()) && !!(user?.fullName || user?.name)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-violet-500 focus:border-violet-500"
               />
             </div>
@@ -331,6 +428,7 @@ function RequestModal({ furniture, mode, onClose, setError, setSuccess }) {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                disabled={(isAuthenticated && isAuthenticated()) && !!user?.email}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-violet-500 focus:border-violet-500"
               />
             </div>
@@ -345,6 +443,7 @@ function RequestModal({ furniture, mode, onClose, setError, setSuccess }) {
               required
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              disabled={(isAuthenticated && isAuthenticated()) && !!(user?.phoneNumber || user?.phone)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-violet-500 focus:border-violet-500"
               placeholder="+91 9876543210"
             />

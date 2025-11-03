@@ -26,8 +26,8 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
+    <AuthProvider>
+      <Router>
         <ErrorBoundary>
           <div className="App">
             <ScrollToTop />
@@ -111,8 +111,8 @@ function App() {
             </Routes>
           </div>
         </ErrorBoundary>
-      </AuthProvider>
-    </Router>
+      </Router>
+    </AuthProvider>
   );
 }
 
