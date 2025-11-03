@@ -40,9 +40,13 @@ function PropertyDetails() {
 
   const fetchProperty = async () => {
     try {
+      console.log('Fetching property with ID:', id);
       const response = await propertyService.getPropertyById(id);
+      console.log('Property fetched:', response);
+      console.log('Property ID:', response._id);
       setProperty(response);
     } catch (err) {
+      console.error('Error fetching property:', err);
       setError(err.message || 'Failed to fetch property details');
     } finally {
       setLoading(false);
@@ -141,13 +145,33 @@ function PropertyDetails() {
       return;
     }
     
+    // Check if property exists
+    if (!property || !property._id) {
+      setFormError('Property not found. Please try refreshing the page.');
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
-      await propertyService.submitPropertyRequest({
-        property_id: property._id,
-        ...formData
-      });
+      // Use property_id (string ID like "PROP-2024-1028-ABC123") not _id (MongoDB ObjectId)
+      const propertyId = property.property_id || property._id;
+      
+      const requestData = {
+        property_id: propertyId,
+        name: formData.name,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        message: formData.message
+      };
+      
+      console.log('Property object:', property);
+      console.log('Property ID field:', property.property_id);
+      console.log('Property _id field:', property._id);
+      console.log('Using property_id:', propertyId);
+      console.log('Submitting property request:', requestData);
+      
+      await propertyService.submitPropertyRequest(requestData);
       
       setFormSuccess('Your request has been submitted successfully!');
       // Reset form
@@ -158,6 +182,7 @@ function PropertyDetails() {
         message: ''
       });
     } catch (error) {
+      console.error('Error submitting property request:', error);
       setFormError(error.message || 'Failed to submit request. Please try again.');
     } finally {
       setIsSubmitting(false);

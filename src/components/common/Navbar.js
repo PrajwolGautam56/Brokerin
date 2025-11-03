@@ -26,7 +26,7 @@ function Navbar() {
   };
 
   return (
-    <nav className="bg-white py-4 fixed w-full top-0 z-50 shadow">
+    <nav className="glass py-4 fixed w-full top-0 z-50 shadow-lg backdrop-blur-md bg-white/95 border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           {/* Logo */}
@@ -140,6 +140,36 @@ function Navbar() {
                       <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
                         {user.name}
                       </div>
+                      {user.isAdmin && (
+                        <Link
+                          to="/admin"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          Admin Dashboard
+                        </Link>
+                      )}
+                      <Link
+                        to="/dashboard"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        My Dashboard
+                      </Link>
+                      <Link
+                        to="/profile"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        My Profile
+                      </Link>
+                      <Link
+                        to="/my-bookings"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        My Bookings
+                      </Link>
                       <button
                         onClick={handleLogout}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -217,6 +247,36 @@ function Navbar() {
                   <span className="text-gray-700 px-4 py-2">
                     Welcome, {user.name}
                   </span>
+                  {user.isAdmin && (
+                    <Link 
+                      to="/admin"
+                      className="text-gray-700 hover:text-gray-900 px-4 py-2 hover:bg-gray-50 rounded-lg"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Admin Dashboard
+                    </Link>
+                  )}
+                  <Link 
+                    to="/dashboard"
+                    className="text-gray-700 hover:text-gray-900 px-4 py-2 hover:bg-gray-50 rounded-lg"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    My Dashboard
+                  </Link>
+                  <Link 
+                    to="/profile"
+                    className="text-gray-700 hover:text-gray-900 px-4 py-2 hover:bg-gray-50 rounded-lg"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    My Profile
+                  </Link>
+                  <Link 
+                    to="/my-bookings"
+                    className="text-gray-700 hover:text-gray-900 px-4 py-2 hover:bg-gray-50 rounded-lg"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    My Bookings
+                  </Link>
                   <button 
                     onClick={() => {
                       handleLogout();

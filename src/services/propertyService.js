@@ -60,7 +60,7 @@ export const propertyService = {
       }
 
       // Use the correct endpoint
-      const response = await api.post('/properties/', formData, {
+      const response = await api.post('/api/properties', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`
@@ -208,6 +208,9 @@ export const propertyService = {
 
   submitPropertyRequest: async (requestData) => {
     try {
+      console.log('Submitting property request to API:', requestData);
+      console.log('Property ID being sent:', requestData.property_id);
+      
       const response = await api.post('/api/property-forms', {
         property_id: requestData.property_id,
         name: requestData.name,
@@ -215,17 +218,32 @@ export const propertyService = {
         phoneNumber: requestData.phoneNumber,
         message: requestData.message
       });
+      
+      console.log('Property request response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error submitting property request:', error);
-      throw error.response?.data || { message: 'Failed to submit property request' };
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      console.error('Error details:', JSON.stringify(error.response?.data, null, 2));
+      
+      // Create a detailed error message
+      let errorMessage = error.response?.data?.message || error.message || 'Failed to submit property request';
+      
+      // If it's a property not found error, provide helpful message
+      if (error.response?.status === 404 || errorMessage.toLowerCase().includes('property')) {
+        errorMessage = 'Property not found. Please try refreshing the page.';
+      }
+      
+      throw new Error(errorMessage);
     }
   },
 
   // Property CRUD operations
-  getAllPropertyRequests: async () => {
+  getAllPropertyRequests: async (filters = {}) => {
     try {
-      const response = await api.get('/api/property-forms');
+      const queryParams = new URLSearchParams(filters).toString();
+      const response = await api.get(`/api/property-forms${queryParams ? '?' + queryParams : ''}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching property requests:', error);
@@ -235,7 +253,13 @@ export const propertyService = {
 
   updatePropertyRequest: async (id, requestData) => {
     try {
-      const response = await api.patch(`/api/property-forms/${id}`, requestData);
+      // If updating status, use the status endpoint
+      if (requestData.status) {
+        const response = await api.patch(`/api/property-forms/${id}/status`, requestData);
+        return response.data;
+      }
+      // Otherwise, use the general update endpoint
+      const response = await api.put(`/api/property-forms/${id}`, requestData);
       return response.data;
     } catch (error) {
       console.error('Error updating property request:', error);

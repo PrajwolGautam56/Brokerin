@@ -23,14 +23,25 @@ function Login() {
     setLoading(true);
 
     // Validate form data
-    if (!formData.email || !formData.password) {
+    const trimmedEmail = formData.email?.trim();
+    const trimmedPassword = formData.password?.trim();
+    
+    if (!trimmedEmail || !trimmedPassword) {
       setError('Please fill in all fields');
       setLoading(false);
       return;
     }
+    
+    // Use trimmed values
+    const loginData = {
+      email: trimmedEmail,
+      password: trimmedPassword
+    };
 
     try {
-      const response = await authService.login(formData);
+      console.log('Login form data:', loginData);
+      const response = await authService.login(loginData);
+      console.log('Login response:', response);
       
       if (response.user) {
         login(response.user);

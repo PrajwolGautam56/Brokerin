@@ -18,11 +18,25 @@ function FurnitureRequests() {
 
   const fetchFurnitureRequests = async () => {
     try {
+      setLoading(true);
       const response = await furnitureService.getAllFurnitureRequests();
-      setRequests(response.requests || []);
+      console.log('Furniture requests response:', response);
+      
+      // Handle different response formats
+      let requestsData = [];
+      if (response.requests) {
+        requestsData = response.requests;
+      } else if (Array.isArray(response)) {
+        requestsData = response;
+      } else if (response.data) {
+        requestsData = Array.isArray(response.data) ? response.data : [];
+      }
+      
+      setRequests(requestsData);
     } catch (error) {
       console.error('Error fetching furniture requests:', error);
       setError('Failed to load furniture requests');
+      setRequests([]);
     } finally {
       setLoading(false);
     }
@@ -33,9 +47,10 @@ function FurnitureRequests() {
       await furnitureService.updateFurnitureRequest(requestId, { status: newStatus });
       setRequests(prev =>
         prev.map(request =>
-          request.id === requestId ? { ...request, status: newStatus } : request
+          (request.id === requestId || request._id === requestId) ? { ...request, status: newStatus } : request
         )
       );
+      setError(null);
     } catch (error) {
       console.error('Error updating status:', error);
       setError('Failed to update status');
@@ -46,7 +61,8 @@ function FurnitureRequests() {
     if (window.confirm('Are you sure you want to delete this request?')) {
       try {
         await furnitureService.deleteFurnitureRequest(requestId);
-        setRequests(prev => prev.filter(r => r.id !== requestId));
+        setRequests(prev => prev.filter(r => r.id !== requestId && r._id !== requestId));
+        setError(null);
       } catch (error) {
         console.error('Error deleting request:', error);
         setError('Failed to delete request');
@@ -109,18 +125,21 @@ function FurnitureRequests() {
             <p className="text-gray-500">No {activeStatus.toLowerCase()} requests found</p>
           </div>
         ) : (
-          filteredRequests.map((request) => (
+          filteredRequests.map((request) => {
+            const requestId = request._id || request.id;
+            return (
             <div
-              key={request.id}
+              key={requestId}
               className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
             >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    {request.furniture_name || `Request #${request.id}`}
+                    {request.furniture_name || request.furniture_details?.name || `Request #${requestId}`}
                   </h3>
                   <p className="text-sm text-gray-500 mb-4">
-                    {request.type === 'buy' ? 'Purchase' : 'Rental'} - {request.duration ? `Duration: ${request.duration} months` : 'One-time purchase'}
+                    {request.listing_type === 'Sell' ? 'Purchase' : request.listing_type === 'Rent' ? 'Rental' : request.type === 'buy' ? 'Purchase' : 'Rental'} 
+                    {request.rental_duration || request.duration ? ` - Duration: ${request.rental_duration || request.duration} months` : ''}
                   </p>
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -130,7 +149,7 @@ function FurnitureRequests() {
                     </div>
                     <div>
                       <h4 className="text-sm font-medium text-gray-700 mb-1">Phone</h4>
-                      <p className="text-sm text-gray-600">{request.phone}</p>
+                      <p className="text-sm text-gray-600">{request.phoneNumber || request.phone}</p>
                     </div>
                     <div>
                       <h4 className="text-sm font-medium text-gray-700 mb-1">Email</h4>
@@ -139,7 +158,7 @@ function FurnitureRequests() {
                     <div>
                       <h4 className="text-sm font-medium text-gray-700 mb-1">Date</h4>
                       <p className="text-sm text-gray-600">
-                        {request.preferred_date ? new Date(request.preferred_date).toLocaleDateString() : 'Not specified'}
+                        {request.preferred_date ? new Date(request.preferred_date).toLocaleDateString() : request.createdAt ? new Date(request.createdAt).toLocaleDateString() : 'Not specified'}
                       </p>
                     </div>
                   </div>
@@ -178,7 +197,7 @@ function FurnitureRequests() {
                   <div className="flex gap-2 mt-2">
                     {request.status === 'Requested' && (
                       <button
-                        onClick={() => handleStatusChange(request.id, 'Confirmed')}
+                        onClick={() => handleStatusChange(requestId, 'Confirmed')}
                         className="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-sm hover:bg-green-200"
                       >
                         Confirm
@@ -186,7 +205,7 @@ function FurnitureRequests() {
                     )}
                     {request.status === 'Confirmed' && (
                       <button
-                        onClick={() => handleStatusChange(request.id, 'Delivered')}
+                        onClick={() => handleStatusChange(requestId, 'Delivered')}
                         className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-sm hover:bg-blue-200"
                       >
                         Mark Delivered
@@ -194,14 +213,14 @@ function FurnitureRequests() {
                     )}
                     {request.status === 'Delivered' && (
                       <button
-                        onClick={() => handleStatusChange(request.id, 'Completed')}
+                        onClick={() => handleStatusChange(requestId, 'Completed')}
                         className="bg-violet-100 text-violet-700 px-3 py-1 rounded-lg text-sm hover:bg-violet-200"
                       >
                         Complete
                       </button>
                     )}
                     <button
-                      onClick={() => handleDelete(request.id)}
+                      onClick={() => handleDelete(requestId)}
                       className="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-sm hover:bg-red-200"
                     >
                       Delete
@@ -210,7 +229,8 @@ function FurnitureRequests() {
                 </div>
               </div>
             </div>
-          ))
+          );
+          })
         )}
       </div>
 

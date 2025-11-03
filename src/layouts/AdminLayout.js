@@ -19,8 +19,9 @@ import {
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: HomeIcon },
   { name: 'Properties', href: '/admin/properties', icon: BuildingOfficeIcon },
+  { name: 'Furniture', href: '/admin/furniture', icon: ShoppingBagIcon },
   { name: 'Property Requests', href: '/admin/property-requests', icon: ClipboardDocumentListIcon },
-  { name: 'Furniture Requests', href: '/admin/furniture-requests', icon: ShoppingBagIcon },
+  { name: 'Furniture Requests', href: '/admin/furniture-requests', icon: ClipboardDocumentListIcon },
   { name: 'Users', href: '/admin/users', icon: UserGroupIcon },
   { name: 'Services', href: '/admin/services', icon: WrenchScrewdriverIcon },
   { name: 'Enquiries', href: '/admin/enquiries', icon: ChatBubbleLeftIcon },

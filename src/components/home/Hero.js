@@ -56,40 +56,49 @@ function Hero() {
   };
 
   return (
-    <div className="pt-32 pb-16 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="pt-32 pb-20 bg-gradient-to-br from-gray-50 via-violet-50/30 to-purple-50/30 relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-violet-200/20 rounded-full blur-3xl -z-10"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl -z-10"></div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex flex-col lg:flex-row items-start gap-16">
           {/* Left Side */}
-          <div className="lg:w-1/2">
-            
-            <p className="text-gray-600 mb-4 mt-6 text-lg">
-              A great platform to buy or  rent properties easily.
+          <div className="lg:w-1/2 animate-slide-up">
+            <p className="text-violet-600 mb-4 mt-6 text-lg font-medium">
+              A great platform to buy or rent properties easily.
             </p>
-            <h1 className="text-4xl font-bold mb-8">
-              Trust In.           Broker In.
+            <h1 className="text-5xl md:text-6xl font-extrabold mb-6 leading-tight">
+              <span className="gradient-text">Trust In.</span>
+              <br />
+              <span className="text-gray-900">Broker In.</span>
             </h1>
             
             {/* Stats */}
-            <div className="flex gap-16 mb-12">
-              <div>
-                <h3 className="text-4xl font-bold text-violet-500">500+</h3>
-                <p className="text-gray-500 mt-1">Customers</p>
+            <div className="flex gap-12 mb-12">
+              <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                <h3 className="text-4xl font-bold gradient-text">500+</h3>
+                <p className="text-gray-600 mt-2 font-medium">Happy Customers</p>
               </div>
-              <div>
-                <h3 className="text-4xl font-bold text-violet-500">1K+</h3>
-                <p className="text-gray-500 mt-1">Properties</p>
+              <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                <h3 className="text-4xl font-bold gradient-text">1K+</h3>
+                <p className="text-gray-600 mt-2 font-medium">Properties</p>
               </div>
             </div>
 
             {/* Filter Section */}
-            <div className="bg-white p-8 rounded-2xl shadow-lg">
-              <div className="flex justify-center gap-12 mb-8">
+            <div className="bg-white/90 backdrop-blur-lg p-8 rounded-2xl shadow-modern-lg border border-white/50">
+              <div className="flex justify-center gap-8 mb-8">
                 <button 
                   onClick={() => {
                     setFormType('rent');
                     setSearchParams(prev => ({ ...prev, type: 'rent' }));
                   }}
-                  className={`pb-2 px-4 ${formType === 'rent' ? 'text-violet-500 border-b-2 border-violet-500' : 'text-gray-400'}`}
+                  className={`pb-3 px-6 font-semibold transition-all duration-300 ${
+                    formType === 'rent' 
+                      ? 'text-violet-600 border-b-2 border-violet-600 scale-105' 
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
                 >
                   Rent
                 </button>
@@ -98,7 +107,11 @@ function Hero() {
                     setFormType('buy');
                     setSearchParams(prev => ({ ...prev, type: 'buy' }));
                   }}
-                  className={`pb-2 px-4 ${formType === 'buy' ? 'text-violet-500 border-b-2 border-violet-500' : 'text-gray-400'}`}
+                  className={`pb-3 px-6 font-semibold transition-all duration-300 ${
+                    formType === 'buy' 
+                      ? 'text-violet-600 border-b-2 border-violet-600 scale-105' 
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
                 >
                   Buy
                 </button>
@@ -139,7 +152,7 @@ function Hero() {
                 {/* Search Button */}
                 <button 
                   type="submit"
-                  className="w-full bg-violet-500 text-white py-3.5 rounded-xl hover:bg-violet-600 transition-colors font-medium"
+                  className="w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white py-4 rounded-xl hover:from-violet-700 hover:to-purple-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-violet transform hover:scale-[1.02]"
                 >
                   Search Properties
                 </button>
@@ -148,13 +161,14 @@ function Hero() {
           </div>
 
           {/* Right Side - Property Preview Cards */}
-          <div className="lg:w-1/2 space-y-6 lg:mt-1">
+          <div className="lg:w-1/2 space-y-6 lg:mt-1 animate-slide-up">
             {previewProperties.length > 0 ? (
-              previewProperties.map(property => (
+              previewProperties.map((property, index) => (
                 <Link 
                   key={property.id} 
                   to={`/property/${property.id}`}
-                  className="block transition-transform hover:-translate-y-1 duration-200"
+                  className="block transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02]"
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <PropertyPreviewCard property={property} />
                 </Link>
@@ -176,37 +190,47 @@ function PropertyPreviewCard({ property }) {
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
 
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+    <div className="card-modern group">
       <div className="flex p-5">
-        <div className="w-44 h-36 bg-gray-200 rounded-lg overflow-hidden">
+        <div className="w-44 h-36 bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow duration-300">
           {property.imageUrl && !imageLoadFailed ? (
             <img 
               src={property.imageUrl}
               alt={property.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               onError={() => setImageLoadFailed(true)}
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
-              <span>No image available</span>
+            <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gradient-to-br from-gray-100 to-gray-200">
+              <span className="text-xs">No image</span>
             </div>
           )}
         </div>
         <div className="ml-5 flex-1">
-          <h3 className="font-medium text-gray-900 mb-3 text-lg">{property.title}</h3>
-          <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
-            <span>{property.bedrooms} bedroom</span>
-            <span>{property.bathrooms} bath</span>
+          <h3 className="font-semibold text-gray-900 mb-2 text-lg group-hover:text-violet-600 transition-colors">{property.title}</h3>
+          <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
+            <span className="flex items-center gap-1">
+              <span className="font-medium">{property.bedrooms}</span> bedroom
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="font-medium">{property.bathrooms}</span> bath
+            </span>
           </div>
-          <p className="text-sm text-gray-600 mb-4">{property.location}</p>
+          <p className="text-sm text-gray-500 mb-4 flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {property.location}
+          </p>
           <div className="flex justify-between items-center">
-            <span className="bg-violet-100 text-violet-600 px-4 py-1.5 rounded-full text-sm">
+            <span className="bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700 px-4 py-1.5 rounded-full text-xs font-semibold shadow-sm">
               {property.status}
             </span>
             <div className="text-right">
-              <span className="text-sm text-gray-500">from</span>
-              <p className="font-semibold text-lg">{property.price}</p>
+              <span className="text-xs text-gray-400 block">from</span>
+              <p className="font-bold text-lg gradient-text">{property.price}</p>
             </div>
           </div>
         </div>

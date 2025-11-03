@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { MapIcon, ViewColumnsIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
 import PropertiesMap from '../components/property/PropertiesMap';
@@ -20,21 +20,43 @@ function Properties() {
     pages: 1
   });
 
-  // Initialize filters from URL params
-  const [filters, setFilters] = useState({
-    type: searchParams.get('type') || 'all',
-    location: searchParams.get('location') || '',
-    buildingType: searchParams.get('buildingType') || 'all',
-    bhk: searchParams.get('bhk') || 'all',
-    priceRange: searchParams.get('priceRange') || 'all',
-    furnishing: searchParams.get('furnishing') || 'all',
-    availability: searchParams.get('availability') || 'all',
-    sortBy: searchParams.get('sortBy') || 'newest'
+  // Initialize filters from URL params or location state
+  const [filters, setFilters] = useState(() => {
+    // Check if we have search params from navigation (e.g., from Hero search)
+    const urlType = searchParams.get('type');
+    const locationState = location.state?.type || location.state?.searchParams?.type;
+    
+    return {
+      type: urlType || locationState || 'all',
+      location: searchParams.get('location') || location.state?.location || location.state?.searchParams?.location || '',
+      buildingType: searchParams.get('buildingType') || 'all',
+      bhk: searchParams.get('bhk') || 'all',
+      priceRange: searchParams.get('priceRange') || 'all',
+      furnishing: searchParams.get('furnishing') || 'all',
+      availability: searchParams.get('availability') || 'all',
+      sortBy: searchParams.get('sortBy') || 'newest'
+    };
   });
 
   useEffect(() => {
     fetchProperties();
   }, []);
+
+  // Debug: Log when filters or properties change
+  useEffect(() => {
+    console.log('🔔 Filters changed:', filters);
+    console.log('📊 Total properties:', properties.length);
+    console.log('🎯 Current filter type:', filters.type);
+    if (properties.length > 0) {
+      const sampleProperty = properties[0];
+      console.log('📋 Sample property:', {
+        name: sampleProperty.name,
+        listing_type: sampleProperty.listing_type,
+        price: sampleProperty.price,
+        status: sampleProperty.status
+      });
+    }
+  }, [filters, properties]);
 
   const fetchProperties = async () => {
     try {
@@ -59,71 +81,167 @@ function Properties() {
     }
   };
 
-  // Filter properties based on current filters
-  const filteredProperties = Array.isArray(properties) ? properties.filter(property => {
-    // Type filter (Rent/Sell)
-    if (filters.type !== 'all') {
-      if (filters.type === 'buy' && property.listing_type?.toLowerCase() !== 'sell') return false;
-      if (filters.type === 'rent' && property.listing_type?.toLowerCase() !== 'rent') return false;
+  // Filter properties based on current filters - using useMemo for performance
+  const filteredProperties = useMemo(() => {
+    if (!Array.isArray(properties) || properties.length === 0) {
+      return [];
     }
 
+    console.log('🔍 Filtering properties with filter type:', filters.type);
+    console.log('📊 Total properties to filter:', properties.length);
+
+    const filtered = properties.filter(property => {
+      // Type filter (Rent/Sell) - Handle case-insensitive matching
+      if (filters.type !== 'all') {
+        // Get listing_type and normalize it
+        const listingType = property.listing_type ? String(property.listing_type).trim() : '';
+        const listingTypeLower = listingType.toLowerCase();
+        
+        console.log(`🔍 Checking property "${property.name || property._id}": listing_type="${listingType}" (normalized: "${listingTypeLower}")`);
+        console.log(`   Price object:`, property.price);
+        console.log(`   rent_monthly:`, property.price?.rent_monthly);
+        console.log(`   sell_price:`, property.price?.sell_price);
+        
+        if (filters.type === 'buy') {
+          // For buy: should be 'Sell' (case-insensitive)
+          // Price check is optional - show property even if price is not set
+          const isForSell = listingTypeLower === 'sell';
+          
+          if (!isForSell) {
+            console.log(`❌ Property "${property.name || property._id}" filtered out (buy): listing_type="${listingType}", isForSell=${isForSell}`);
+            return false;
+          }
+          console.log(`✅ Property "${property.name || property._id}" passed buy filter`);
+        } else if (filters.type === 'rent') {
+          // For rent: should be 'Rent' (case-insensitive)
+          // Price check is optional - show property even if price is not set
+          const isForRent = listingTypeLower === 'rent';
+          
+          if (!isForRent) {
+            console.log(`❌ Property "${property.name || property._id}" filtered out (rent): listing_type="${listingType}", isForRent=${isForRent}`);
+            return false;
+          }
+          console.log(`✅ Property "${property.name || property._id}" passed rent filter`);
+        }
+      }
+
     // Location filter
-    if (filters.location && !property.location?.toLowerCase().includes(filters.location.toLowerCase())) {
-      return false;
+    if (filters.location && filters.location.trim()) {
+      const propertyLocation = property.location?.toLowerCase() || '';
+      const filterLocation = filters.location.toLowerCase().trim();
+      if (!propertyLocation.includes(filterLocation)) {
+        return false;
+      }
     }
 
     // Building Type filter
-    if (filters.buildingType !== 'all' && property.building_type?.toLowerCase() !== filters.buildingType.toLowerCase()) {
-      return false;
+    if (filters.buildingType !== 'all') {
+      const propertyBuildingType = property.building_type?.toLowerCase() || '';
+      const filterBuildingType = filters.buildingType.toLowerCase();
+      if (propertyBuildingType !== filterBuildingType) {
+        return false;
+      }
     }
 
     // BHK filter
-    if (filters.bhk !== 'all' && property.bhk !== parseInt(filters.bhk)) {
-      return false;
+    if (filters.bhk !== 'all') {
+      const filterBhk = parseInt(filters.bhk);
+      const propertyBhk = parseInt(property.bhk) || 0;
+      if (filterBhk === 5) {
+        // 5+ means 5 or more
+        if (propertyBhk < 5) return false;
+      } else {
+        if (propertyBhk !== filterBhk) return false;
+      }
     }
 
     // Furnishing filter
-    if (filters.furnishing !== 'all' && property.furnishing?.toLowerCase() !== filters.furnishing.toLowerCase()) {
-      return false;
+    if (filters.furnishing !== 'all') {
+      const propertyFurnishing = property.furnishing?.toLowerCase() || '';
+      const filterFurnishing = filters.furnishing.toLowerCase();
+      if (propertyFurnishing !== filterFurnishing) {
+        return false;
+      }
+    }
+
+    // Availability filter
+    if (filters.availability !== 'all') {
+      const propertyAvailability = property.availability?.toLowerCase() || '';
+      const filterAvailability = filters.availability.toLowerCase();
+      if (propertyAvailability !== filterAvailability) {
+        return false;
+      }
     }
 
     // Price Range filter
     if (filters.priceRange !== 'all') {
-      const [min, max] = filters.priceRange.split('-').map(Number);
-      const price = property.listing_type === 'Rent' 
+      const listingType = (property.listing_type || '').toLowerCase();
+      // Use rent_monthly for Rent, sell_price for Sell
+      const price = listingType === 'rent'
         ? property.price?.rent_monthly 
         : property.price?.sell_price;
 
-      if (!price) return false;
+      if (!price || price === 0) return false;
+      
+      const [minStr, maxStr] = filters.priceRange.split('-');
+      const min = parseInt(minStr);
+      const max = maxStr ? parseInt(maxStr) : null;
       
       if (max) {
+        // Range like "10000-25000"
         if (price < min || price > max) return false;
       } else {
-        // For ranges like '100000+'
+        // Range like "100000" (minimum only)
         if (price < min) return false;
       }
     }
 
-    return true;
-  }) : [];
+      // Status filter - only show available properties (but don't filter if status is missing)
+      if (property.status && property.status.toLowerCase() !== 'available') {
+        return false;
+      }
 
-  // Sort filtered properties
-  const sortedProperties = [...filteredProperties].sort((a, b) => {
+      return true;
+    });
+
+    console.log(`✅ Filtered ${filtered.length} properties out of ${properties.length}`);
+    console.log('📋 Filter breakdown:', {
+      total: properties.length,
+      filtered: filtered.length,
+      filterType: filters.type,
+      sampleFiltered: filtered.length > 0 ? {
+        name: filtered[0].name,
+        listing_type: filtered[0].listing_type,
+        price: filtered[0].price
+      } : null
+    });
+    return filtered;
+  }, [properties, filters.type, filters.location, filters.buildingType, filters.bhk, filters.priceRange, filters.furnishing, filters.availability]);
+
+  // Sort filtered properties - using useMemo for performance
+  const sortedProperties = useMemo(() => {
+    const sorted = [...filteredProperties].sort((a, b) => {
     switch (filters.sortBy) {
       case 'newest':
-        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+        return new Date(b.createdAt || b.created_at || 0) - new Date(a.createdAt || a.created_at || 0);
       case 'price-low':
-        const priceA = a.listing_type === 'Rent' ? (a.price?.rent_monthly || 0) : (a.price?.sell_price || 0);
-        const priceB = b.listing_type === 'Rent' ? (b.price?.rent_monthly || 0) : (b.price?.sell_price || 0);
+        const listingTypeA = (a.listing_type || '').toLowerCase();
+        const listingTypeB = (b.listing_type || '').toLowerCase();
+        const priceA = listingTypeA === 'rent' ? (a.price?.rent_monthly || 0) : (a.price?.sell_price || 0);
+        const priceB = listingTypeB === 'rent' ? (b.price?.rent_monthly || 0) : (b.price?.sell_price || 0);
         return priceA - priceB;
       case 'price-high':
-        const priceHighA = a.listing_type === 'Rent' ? (a.price?.rent_monthly || 0) : (a.price?.sell_price || 0);
-        const priceHighB = b.listing_type === 'Rent' ? (b.price?.rent_monthly || 0) : (b.price?.sell_price || 0);
+        const listingTypeHighA = (a.listing_type || '').toLowerCase();
+        const listingTypeHighB = (b.listing_type || '').toLowerCase();
+        const priceHighA = listingTypeHighA === 'rent' ? (a.price?.rent_monthly || 0) : (a.price?.sell_price || 0);
+        const priceHighB = listingTypeHighB === 'rent' ? (b.price?.rent_monthly || 0) : (b.price?.sell_price || 0);
         return priceHighB - priceHighA;
       default:
         return 0;
     }
-  });
+    });
+    return sorted;
+  }, [filteredProperties, filters.sortBy]);
 
   // Update URL when filters change
   useEffect(() => {
@@ -166,7 +284,8 @@ function Properties() {
               Available Properties
             </h1>
             <p className="mt-4 text-lg text-gray-600">
-              {sortedProperties.length} properties found
+              {sortedProperties.length} {sortedProperties.length === 1 ? 'property' : 'properties'} found
+              {filters.type !== 'all' && ` (${filters.type === 'rent' ? 'For Rent' : 'For Sale'})`}
             </p>
           </div>
         </div>
@@ -181,33 +300,54 @@ function Properties() {
             <div className="bg-white shadow-sm mb-4">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
                 {/* Type Filter Tabs */}
-                <div className="flex justify-center mb-4">
+                <div className="flex justify-center mb-4 gap-8">
                   <button
-                    onClick={() => setFilters(prev => ({ ...prev, type: 'all' }))}
-                    className={`pb-2 px-8 ${
+                    onClick={() => {
+                      console.log('🔄 Setting filter to: all');
+                      setFilters(prev => {
+                        const updated = { ...prev, type: 'all' };
+                        console.log('✅ Updated filters:', updated);
+                        return updated;
+                      });
+                    }}
+                    className={`pb-3 px-8 font-semibold transition-all duration-300 ${
                       filters.type === 'all' 
-                        ? 'text-brand-violet border-b-2 border-brand-violet' 
-                        : 'text-gray-400'
+                        ? 'text-violet-600 border-b-2 border-violet-600' 
+                        : 'text-gray-400 hover:text-gray-600'
                     }`}
                   >
                     All Properties
                   </button>
                   <button
-                    onClick={() => setFilters(prev => ({ ...prev, type: 'rent' }))}
-                    className={`pb-2 px-8 ${
+                    onClick={() => {
+                      console.log('🔄 Setting filter to: rent');
+                      setFilters(prev => {
+                        const updated = { ...prev, type: 'rent' };
+                        console.log('✅ Updated filters:', updated);
+                        return updated;
+                      });
+                    }}
+                    className={`pb-3 px-8 font-semibold transition-all duration-300 ${
                       filters.type === 'rent' 
-                        ? 'text-violet-500 border-b-2 border-violet-500' 
-                        : 'text-gray-400'
+                        ? 'text-violet-600 border-b-2 border-violet-600' 
+                        : 'text-gray-400 hover:text-gray-600'
                     }`}
                   >
                     For Rent
                   </button>
                   <button
-                    onClick={() => setFilters(prev => ({ ...prev, type: 'buy' }))}
-                    className={`pb-2 px-8 ${
+                    onClick={() => {
+                      console.log('🔄 Setting filter to: buy');
+                      setFilters(prev => {
+                        const updated = { ...prev, type: 'buy' };
+                        console.log('✅ Updated filters:', updated);
+                        return updated;
+                      });
+                    }}
+                    className={`pb-3 px-8 font-semibold transition-all duration-300 ${
                       filters.type === 'buy' 
-                        ? 'text-violet-500 border-b-2 border-violet-500' 
-                        : 'text-gray-400'
+                        ? 'text-violet-600 border-b-2 border-violet-600' 
+                        : 'text-gray-400 hover:text-gray-600'
                     }`}
                   >
                     For Sale
@@ -224,7 +364,7 @@ function Properties() {
                       Filters
                     </button>
                     <span className="text-gray-600">
-                      {filteredProperties.length} properties found
+                      {filteredProperties.length} {filteredProperties.length === 1 ? 'property' : 'properties'} found
                     </span>
                   </div>
 

@@ -1,10 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircleIcon, ArrowRightIcon } from '@heroicons/react/24/solid';
+import serviceBookingService from '../services/serviceBookingService';
+import { useAuth } from '../context/AuthContext';
 
 function Services() {
+  const { user, isAuthenticated } = useAuth();
   const [selectedService, setSelectedService] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    service_type: '',
+    name: '',
+    phone_number: '',
+    email: '',
+    preferred_date: '',
+    preferred_time: '',
+    alternate_date: '',
+    alternate_time: '',
+    service_address: '',
+    additional_notes: ''
+  });
+  useEffect(() => {
+    if (isAuthenticated && isAuthenticated() && user) {
+      setFormData((prev) => ({
+        ...prev,
+        name: user.fullName || user.name || '',
+        email: user.email || '',
+        phone_number: user.phoneNumber || user.phone || ''
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const services = [
     {
@@ -61,6 +90,96 @@ function Services() {
   const handleServiceSelect = (service) => {
     setSelectedService(service);
     setShowForm(true);
+    // Map category to service_type
+    const serviceTypeMap = {
+      'Carpentry': 'carpentry',
+      'Home Maintenance': 'plumbing',
+      'Moving & Packing': 'moving',
+      'Appliance Services': 'appliance_repair'
+    };
+    setFormData(prev => ({
+      ...prev,
+      service_type: serviceTypeMap[service.category] || 'plumbing'
+    }));
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear messages when user starts typing
+    if (error) setError('');
+    if (success) setSuccess('');
+  };
+
+  const validateForm = () => {
+    if (!formData.service_type) return 'Please select a service type';
+    if (!(formData.name || user?.fullName || user?.name)) return 'Name is required';
+    if (!((formData.phone_number || '').trim() || user?.phoneNumber || user?.phone)) return 'Phone number is required';
+    if (!formData.preferred_date) return 'Preferred date is required';
+    if (!formData.preferred_time) return 'Preferred time is required';
+    if (!formData.service_address.trim()) return 'Service address is required';
+    
+    // Email validation
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      return 'Please enter a valid email address';
+    }
+    
+    return null;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    setError('');
+    setSuccess('');
+    
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Always send exact email if available to match dashboard aggregation
+      const payload = {
+        ...formData,
+        name: formData.name || user?.fullName || user?.name || '',
+        phone_number: formData.phone_number || user?.phoneNumber || user?.phone || '',
+        email: (user?.email || formData.email || '').trim()
+      };
+      await serviceBookingService.createBooking(payload);
+      setSuccess('Service booking submitted successfully! We will contact you soon.');
+      
+      // Reset form
+      setFormData({
+        service_type: formData.service_type,
+        name: '',
+        phone_number: '',
+        email: '',
+        preferred_date: '',
+        preferred_time: '',
+        alternate_date: '',
+        alternate_time: '',
+        service_address: '',
+        additional_notes: ''
+      });
+      
+      // Go back to services list after 3 seconds
+      setTimeout(() => {
+        setShowForm(false);
+        setSuccess('');
+      }, 3000);
+      
+    } catch (err) {
+      setError(err.message || 'Failed to submit booking. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -156,13 +275,31 @@ function Services() {
                   </h2>
                 </div>
 
-                <form className="space-y-6">
+                {error && (
+                  <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-lg">
+                    {error}
+                  </div>
+                )}
+                
+                {success && (
+                  <div className="mb-4 p-4 bg-green-50 text-green-700 rounded-lg">
+                    {success}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Service Type */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Service Type
+                      Service Type *
                     </label>
-                    <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet">
+                    <select 
+                      name="service_type"
+                      value={formData.service_type}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet"
+                      required
+                    >
                       <option value="">Select a service type</option>
                       {selectedService.subCategories.map((subCategory, index) => (
                         <option 
@@ -179,47 +316,126 @@ function Services() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Name
+                        Name *
                       </label>
                       <input
                         type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet"
                         placeholder="Your name"
+                        required
+                        disabled={(isAuthenticated && isAuthenticated()) && !!(user?.fullName || user?.name)}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Phone
+                        Phone Number *
                       </label>
                       <input
                         type="tel"
+                        name="phone_number"
+                        value={formData.phone_number}
+                        onChange={handleInputChange}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet"
                         placeholder="Your phone number"
+                        required
+                        disabled={(isAuthenticated && isAuthenticated()) && !!(user?.phoneNumber || user?.phone)}
                       />
                     </div>
+                  </div>
+
+                  {/* Email (Optional) */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email (Optional)
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet"
+                      placeholder="Your email address"
+                      disabled={(isAuthenticated && isAuthenticated()) && !!user?.email}
+                    />
                   </div>
 
                   {/* Service Date and Time */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Preferred Date
+                        Preferred Date *
                       </label>
                       <input
                         type="date"
+                        name="preferred_date"
+                        value={formData.preferred_date}
+                        onChange={handleInputChange}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Preferred Time *
+                      </label>
+                      <select 
+                        name="preferred_time"
+                        value={formData.preferred_time}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet"
+                        required
+                      >
+                        <option value="">Select time slot</option>
+                        <option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option>
+                        <option value="11:00">11:00</option>
+                        <option value="12:00">12:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Alternate Date and Time (Optional) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Alternate Date (Optional)
+                      </label>
+                      <input
+                        type="date"
+                        name="alternate_date"
+                        value={formData.alternate_date}
+                        onChange={handleInputChange}
                         min={new Date().toISOString().split('T')[0]}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Preferred Time
+                        Alternate Time (Optional)
                       </label>
-                      <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet">
+                      <select 
+                        name="alternate_time"
+                        value={formData.alternate_time}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet"
+                      >
                         <option value="">Select time slot</option>
-                        <option value="morning">Morning (9 AM - 12 PM)</option>
-                        <option value="afternoon">Afternoon (12 PM - 3 PM)</option>
-                        <option value="evening">Evening (3 PM - 6 PM)</option>
+                        <option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option>
+                        <option value="11:00">11:00</option>
+                        <option value="12:00">12:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
                       </select>
                     </div>
                   </div>
@@ -227,33 +443,45 @@ function Services() {
                   {/* Address */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Service Address
+                      Service Address *
                     </label>
                     <textarea
+                      name="service_address"
+                      value={formData.service_address}
+                      onChange={handleInputChange}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet"
                       rows="3"
                       placeholder="Enter your address"
-                    ></textarea>
+                      required
+                    />
                   </div>
 
                   {/* Additional Notes */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Additional Notes
+                      Additional Notes (Optional)
                     </label>
                     <textarea
+                      name="additional_notes"
+                      value={formData.additional_notes}
+                      onChange={handleInputChange}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-violet focus:border-brand-violet"
                       rows="3"
                       placeholder="Any specific requirements or notes"
-                    ></textarea>
+                    />
                   </div>
 
                   {/* Submit Button */}
                   <button
                     type="submit"
-                    className="w-full bg-brand-violet text-white py-3 rounded-lg hover:bg-brand-violet/90 transition-colors"
+                    disabled={isSubmitting}
+                    className={`w-full py-3 rounded-lg text-white font-medium transition-colors ${
+                      isSubmitting 
+                        ? 'bg-violet-400 cursor-not-allowed' 
+                        : 'bg-brand-violet hover:bg-brand-violet/90'
+                    }`}
                   >
-                    Request Service
+                    {isSubmitting ? 'Submitting...' : 'Request Service'}
                   </button>
                 </form>
               </div>

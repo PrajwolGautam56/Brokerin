@@ -1,4 +1,5 @@
 import api from '../axiosConfig';
+import { tokenService } from './tokenService';
 
 // Test credentials - REMOVE IN PRODUCTION
 const TEST_ADMIN = {
@@ -18,34 +19,42 @@ export const authService = {
             name: 'Admin User',
             role: 'admin'
           },
-          token: 'test-admin-token'
+          token: 'test-admin-token',
+          refreshToken: 'test-refresh-token'
         };
-        localStorage.setItem('token', mockResponse.token);
+        tokenService.setTokens(mockResponse.token, mockResponse.refreshToken);
         localStorage.setItem('user', JSON.stringify(mockResponse.user));
         return mockResponse;
       }
 
-      // Regular API login
+      // Regular API login - backend expects identifier and password
+      console.log('Sending login request with:', { identifier: credentials.email, password: '***' });
       const response = await api.post('/api/auth/signin', {
-        identifier: credentials.email,
+        identifier: credentials.email,  // Backend expects 'identifier' not 'email'
         password: credentials.password
       });
+      console.log('Login API response:', response.data);
 
+      // Store tokens using token service
       if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
+        tokenService.setTokens(response.data.token, response.data.refreshToken);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         return {
           user: response.data.user,
-          token: response.data.token
+          token: response.data.token,
+          refreshToken: response.data.refreshToken
         };
       }
       return response.data;
     } catch (error) {
       console.error('Login error:', error);
       if (error.response) {
-        throw error.response.data || { message: 'Login failed. Please try again.' };
+        const errorMessage = error.response.data?.message || 
+                           error.response.data?.error || 
+                           'Invalid email or password';
+        throw new Error(errorMessage);
       }
-      throw { message: 'Failed to connect to server.' };
+      throw new Error('Failed to connect to server. Please check your internet connection.');
     }
   },
 
@@ -62,12 +71,14 @@ export const authService = {
 
       const response = await api.post('/api/auth/signup', signupData);
 
+      // Store tokens using token service
       if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
+        tokenService.setTokens(response.data.token, response.data.refreshToken);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         return {
           user: response.data.user,
-          token: response.data.token
+          token: response.data.token,
+          refreshToken: response.data.refreshToken
         };
       }
       return response.data;
@@ -76,15 +87,15 @@ export const authService = {
       if (error.response) {
         const errorMessage = error.response.data?.message || 
                            error.response.data?.error || 
-                           'Failed to create account';
-        throw { message: errorMessage };
+                           'Failed to create account. Please check your information and try again.';
+        throw new Error(errorMessage);
       }
-      throw { message: 'An error occurred during signup' };
+      throw new Error('Failed to connect to server. Please check your internet connection.');
     }
   },
 
   logout: () => {
-    localStorage.removeItem('token');
+    tokenService.clearTokens();
     localStorage.removeItem('user');
   },
 
@@ -94,9 +105,7 @@ export const authService = {
   },
 
   isAuthenticated: () => {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    return !!token && !!user;
+    return tokenService.isAuthenticated() && !!localStorage.getItem('user');
   },
 
   checkAdmin: async () => {

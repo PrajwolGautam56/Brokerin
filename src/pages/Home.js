@@ -3,27 +3,45 @@ import FeaturedProperties from '../components/home/FeaturedProperties';
 import PropertyList from '../components/home/PropertyList';
 import AboutSection from '../components/home/AboutSection';
 import TestimonialsSection from '../components/home/TestimonialsSection';
+import ServicesSection from '../components/home/ServicesSection';
+import FurnitureSection from '../components/home/FurnitureSection';
+import StatsBanner from '../components/home/StatsBanner';
+import FeaturesSection from '../components/home/FeaturesSection';
+import CTABanner from '../components/home/CTABanner';
 
 function Home() {
   return (
     <div>
-      {/* Hero Section - White */}
+      {/* Hero Section */}
       <Hero />
 
+      {/* Stats Banner */}
+      <StatsBanner />
+
+      {/* Featured Properties */}
       <FeaturedProperties />
 
-      {/* Featured Properties - Light Gray */}
-       
+      {/* Services Section */}
+      <ServicesSection />
 
-      {/* About Section - White */}
+      {/* Furniture Section */}
+      <FurnitureSection />
+
+      {/* Features/Why Choose Us Section */}
+      <FeaturesSection />
+
+      {/* About Section */}
       <div className="bg-white">
         <AboutSection />
       </div>
 
-      {/* Testimonials - Light Gray */}
+      {/* Testimonials Section */}
       <div className="bg-gray-50">
         <TestimonialsSection />
       </div>
+
+      {/* CTA Banner */}
+      <CTABanner />
     </div>
   );
 }

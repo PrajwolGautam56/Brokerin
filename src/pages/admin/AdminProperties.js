@@ -12,6 +12,9 @@ function AdminProperties() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
+  const [editSelectedFiles, setEditSelectedFiles] = useState([]);
+  const [editPreviewUrls, setEditPreviewUrls] = useState([]);
+  const [existingPhotos, setExistingPhotos] = useState([]);
   const [successMessage, setSuccessMessage] = useState('');
 
   const initialFormData = {
@@ -58,11 +61,14 @@ function AdminProperties() {
   const resetForm = (formType) => {
     if (formType === 'add') {
       setAddFormData({ ...initialFormData });
+      setSelectedFiles([]);
+      setPreviewUrls([]);
     } else {
       setEditFormData({ ...initialFormData });
+      setEditSelectedFiles([]);
+      setEditPreviewUrls([]);
+      setExistingPhotos([]);
     }
-    setSelectedFiles([]);
-    setPreviewUrls([]);
   };
 
   useEffect(() => {
@@ -149,6 +155,14 @@ function AdminProperties() {
         },
         added_by: propertyDetails.added_by || ''
       });
+      // Load existing photos
+      if (propertyDetails.photos && propertyDetails.photos.length > 0) {
+        setExistingPhotos(propertyDetails.photos);
+      } else {
+        setExistingPhotos([]);
+      }
+      setEditSelectedFiles([]);
+      setEditPreviewUrls([]);
       setIsEditModalOpen(true);
     } catch (error) {
       console.error('Error fetching property details:', error);
@@ -164,6 +178,16 @@ function AdminProperties() {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Get current user
+      const token = localStorage.getItem('token');
+      const user = localStorage.getItem('user');
+      if (!token || !user) {
+        alert('Please log in to update a property.');
+        return;
+      }
+      const currentUser = JSON.parse(user);
+      const userId = currentUser?.id || currentUser?._id;
+      
       // Create a FormData object for the update
       const formData = new FormData();
       
@@ -212,41 +236,72 @@ function AdminProperties() {
         formData.append('address[country]', editFormData.address.country);
       }
       
-      // Add amenities
+      // Add amenities array - use amenities[] format
       if (editFormData.amenities) {
-        const amenitiesArray = editFormData.amenities.split(',').map(item => item.trim());
-        formData.append('amenities', JSON.stringify(amenitiesArray));
+        const amenitiesArray = editFormData.amenities.split(',').map(item => item.trim()).filter(item => item);
+        amenitiesArray.forEach(amenity => {
+          formData.append('amenities[]', amenity);
+        });
+      }
+      
+      // Handle location coordinates
+      if (editFormData.location_coordinates) {
+        if (editFormData.location_coordinates.latitude) {
+          formData.append('location_coordinates[latitude]', editFormData.location_coordinates.latitude);
+        }
+        if (editFormData.location_coordinates.longitude) {
+          formData.append('location_coordinates[longitude]', editFormData.location_coordinates.longitude);
+        }
+      }
+
+      // ⚠️ IMPORTANT: Add new photos using 'photos' field name for updates
+      if (editSelectedFiles && editSelectedFiles.length > 0) {
+        editSelectedFiles.forEach((file) => {
+          if (file instanceof File) {
+            formData.append('photos', file);
+          }
+        });
       }
 
       console.log('Updating property with ID:', selectedProperty._id);
       
-      // Try using the FormData approach
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://backend-brokerin-production.up.railway.app'}/api/properties/${selectedProperty._id}`, {
-        method: 'PUT', // Try PUT instead of PATCH
-        body: formData,
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw {
-          status: response.status,
-          message: `Error: ${response.status} ${response.statusText}`
-        };
+      // Add user ID to the request if available
+      if (userId) {
+        formData.append('added_by', userId);
       }
+      
+      // Use the axios instance instead of fetch to ensure Authorization header is included
+      // Axios will automatically set Content-Type to multipart/form-data for FormData
+      const response = await api.put(`/api/properties/${selectedProperty._id}`, formData);
       
       await fetchProperties(); // Refresh the list
       setIsEditModalOpen(false);
-      alert('Property updated successfully');
+      resetForm('edit');
+      setSuccessMessage('Property updated successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error updating property:', error);
       let errorMessage = 'Failed to update property';
       
-      if (error.status === 404) {
+      if (error.response?.status === 404) {
         errorMessage = `Property with ID ${selectedProperty._id} not found. It may have been deleted.`;
-      } else if (error.message) {
-        errorMessage = error.message;
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Your session has expired. Please log in again.';
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      } else if (error.response?.status === 400) {
+        const errorData = error.response.data;
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.errors) {
+          const errorMessages = Object.entries(errorData.errors)
+            .map(([field, msg]) => `${field}: ${msg}`)
+            .join(', ');
+          errorMessage = `Validation errors: ${errorMessages}`;
+        }
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
       }
       
       alert(errorMessage);
@@ -297,31 +352,71 @@ function AdminProperties() {
     }
   };
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = (e, formType = 'add') => {
     const files = Array.from(e.target.files);
+    console.log(`File select triggered for ${formType}, files:`, files.length);
+    
+    if (!files || files.length === 0) {
+      console.warn('No files selected');
+      return;
+    }
     
     // Validate file types and sizes
     const validFiles = files.filter(file => {
-      const isValidType = ['image/jpeg', 'image/png', 'image/gif'].includes(file.type);
+      const isValidType = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg', 'image/webp'].includes(file.type.toLowerCase());
       const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB limit
       
+      console.log(`File ${file.name}: type=${file.type}, size=${file.size}, validType=${isValidType}, validSize=${isValidSize}`);
+      
       if (!isValidType) {
-        setError('Only JPG, PNG, and GIF files are allowed.');
+        setError(`File ${file.name}: Only JPG, PNG, GIF, and WebP files are allowed.`);
         return false;
       }
       if (!isValidSize) {
-        setError('File size should be less than 5MB.');
+        setError(`File ${file.name}: File size should be less than 5MB.`);
         return false;
       }
       return true;
     });
     
+    console.log(`Valid files: ${validFiles.length} out of ${files.length}`);
+    
     if (validFiles.length > 0) {
-      setSelectedFiles(validFiles);
-      
-      // Create preview URLs
-      const urls = validFiles.map(file => URL.createObjectURL(file));
-      setPreviewUrls(urls);
+      if (formType === 'add') {
+        console.log('Setting selectedFiles for add form:', validFiles.map(f => f.name));
+        setSelectedFiles(validFiles);
+        // Create preview URLs
+        const urls = validFiles.map(file => URL.createObjectURL(file));
+        setPreviewUrls(urls);
+        setError(''); // Clear any previous errors
+      } else {
+        console.log('Adding files to edit form:', validFiles.map(f => f.name));
+        setEditSelectedFiles(prev => [...prev, ...validFiles]);
+        // Create preview URLs for new files
+        const urls = validFiles.map(file => URL.createObjectURL(file));
+        setEditPreviewUrls(prev => [...prev, ...urls]);
+        setError(''); // Clear any previous errors
+      }
+    } else {
+      console.error('No valid files after filtering');
+      if (files.length > 0) {
+        setError('No valid files selected. Please check file type and size.');
+      }
+    }
+  };
+  
+  const handleRemoveEditPhoto = (index, isNew = false) => {
+    if (isNew) {
+      // Remove from new photos
+      setEditSelectedFiles(prev => prev.filter((_, i) => i !== index));
+      setEditPreviewUrls(prev => {
+        const url = prev[index];
+        if (url) URL.revokeObjectURL(url);
+        return prev.filter((_, i) => i !== index);
+      });
+    } else {
+      // Remove from existing photos
+      setExistingPhotos(prev => prev.filter((_, i) => i !== index));
     }
   };
 
@@ -347,41 +442,63 @@ function AdminProperties() {
       }
 
       const currentUser = JSON.parse(user);
-      if (!currentUser || !currentUser.id) {
+      if (!currentUser) {
+        console.error('User Data Error: No user found');
+        setError('Please log in to add a property.');
+        return; // Return early instead of throwing error
+      }
+      
+      // Check for id or _id field
+      const userId = currentUser.id || currentUser._id;
+      if (!userId) {
         console.error('User Data Error:', {
           currentUser,
-          hasId: currentUser?.id ? 'Yes' : 'No'
+          hasId: 'No',
+          has_Id: 'No'
         });
         setError('Invalid user data. Please log in again.');
-        return; // Return early instead of throwing error
+        return;
       }
 
       const formData = new FormData();
       
-      // Add all form fields
-      formData.append('name', addFormData.name);
-      formData.append('description', addFormData.description);
-      formData.append('type', addFormData.type);
-      formData.append('size', addFormData.size);
-      formData.append('furnishing', addFormData.furnishing);
-      formData.append('availability', addFormData.availability);
-      formData.append('building_type', addFormData.building_type);
-      formData.append('bhk', addFormData.bhk);
-      formData.append('bedrooms', addFormData.bedrooms);
-      formData.append('bathrooms', addFormData.bathrooms);
-      formData.append('listing_type', addFormData.listing_type);
-      formData.append('parking', addFormData.parking);
-      formData.append('property_type', addFormData.property_type);
-      formData.append('location', addFormData.location);
-      formData.append('zipcode', addFormData.zipcode);
-      formData.append('amenities', addFormData.amenities);
-      formData.append('status', addFormData.status);
-      formData.append('society', addFormData.society);
+      // Add optional fields only if they have values
+      if (addFormData.name && addFormData.name.trim()) {
+        formData.append('name', addFormData.name);
+      }
+      
+      // Add optional fields only if they have values
+      if (addFormData.description) formData.append('description', addFormData.description);
+      if (addFormData.size) formData.append('size', addFormData.size);
+      if (addFormData.furnishing) formData.append('furnishing', addFormData.furnishing);
+      if (addFormData.availability) formData.append('availability', addFormData.availability);
+      if (addFormData.building_type) formData.append('building_type', addFormData.building_type);
+      if (addFormData.bhk) formData.append('bhk', addFormData.bhk);
+      if (addFormData.bedrooms) formData.append('bedrooms', addFormData.bedrooms);
+      if (addFormData.bathrooms) formData.append('bathrooms', addFormData.bathrooms);
+      if (addFormData.listing_type) formData.append('listing_type', addFormData.listing_type);
+      if (addFormData.parking) formData.append('parking', addFormData.parking);
+      if (addFormData.property_type) formData.append('property_type', addFormData.property_type);
+      if (addFormData.location) formData.append('location', addFormData.location);
+      if (addFormData.zipcode) formData.append('zipcode', addFormData.zipcode);
+      // Add amenities array - use amenities[] format
+      if (addFormData.amenities) {
+        const amenitiesArray = addFormData.amenities.split(',').map(item => item.trim()).filter(item => item);
+        amenitiesArray.forEach(amenity => {
+          formData.append('amenities[]', amenity);
+        });
+      }
+      if (addFormData.status) formData.append('status', addFormData.status);
+      if (addFormData.society) formData.append('society', addFormData.society);
       formData.append('pets_allowed', addFormData.pets_allowed ? 'true' : 'false');
       
-      // Add price fields
-      formData.append('price[rent_monthly]', Number(addFormData.price.rent_monthly));
-      formData.append('price[deposit]', Number(addFormData.price.deposit));
+      // Add price fields only if they have values
+      if (addFormData.price.rent_monthly && !isNaN(addFormData.price.rent_monthly)) {
+        formData.append('price[rent_monthly]', Number(addFormData.price.rent_monthly));
+      }
+      if (addFormData.price.deposit && !isNaN(addFormData.price.deposit)) {
+        formData.append('price[deposit]', Number(addFormData.price.deposit));
+      }
       
       // Add address fields
       formData.append('address[street]', addFormData.address.street || '');
@@ -393,32 +510,38 @@ function AdminProperties() {
       formData.append('location_coordinates[longitude]', addFormData.location_coordinates.longitude);
       
       // Add images - handle multiple files
+      console.log('Selected files count:', selectedFiles?.length || 0);
       if (selectedFiles && selectedFiles.length > 0) {
+        console.log('Appending images to FormData...');
         selectedFiles.forEach((file, index) => {
+          console.log(`Appending image ${index + 1}:`, file.name, file.type, file.size);
           formData.append('images', file);
         });
+      } else {
+        console.warn('No images selected to upload');
       }
       
       // Add user ID
-      formData.append('added_by', currentUser.id);
+      formData.append('added_by', userId);
 
       // Log form data for debugging
-      console.log('Form data being sent:');
+      console.log('=== Form data being sent ===');
+      let imageCount = 0;
       for (let [key, value] of formData.entries()) {
         if (key === 'images') {
-          console.log(`${key}: File object`);
+          imageCount++;
+          console.log(`${key}[${imageCount}]: File object`);
         } else {
-          console.log(`${key}: ${value}`);
+          console.log(`${key}:`, value);
         }
       }
+      console.log(`Total images: ${imageCount}`);
+      console.log('=== End of form data ===');
 
       // Use the axios instance for the API call with proper headers
-      const response = await api.post('/properties/', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Accept': 'application/json'
-        }
-      });
+      // Note: Don't set headers manually - let the interceptor add Authorization
+      // Axios will automatically set Content-Type to multipart/form-data for FormData
+      const response = await api.post('/api/properties', formData);
 
       if (response.data) {
         setProperties(prev => [...prev, response.data]);
@@ -447,14 +570,20 @@ function AdminProperties() {
         window.location.href = '/login';
       } else if (error.response?.status === 400) {
         const errorData = error.response.data;
+        console.error('=== 400 Error Details ===');
+        console.error('Error data:', JSON.stringify(errorData, null, 2));
+        console.error('=== End of 400 Error Details ===');
+        
         if (errorData.errors) {
           // Handle validation errors
           const errorMessages = Object.entries(errorData.errors)
             .map(([field, message]) => `${field}: ${message}`)
             .join(', ');
           setError(`Validation errors: ${errorMessages}`);
+        } else if (errorData.message) {
+          setError(errorData.message);
         } else {
-          setError(errorData.message || 'Invalid data provided. Please check all fields.');
+          setError('Invalid data provided. Please check all fields.');
         }
       } else if (error.response?.status === 403) {
         setError('You do not have permission to add properties.');
@@ -621,27 +750,25 @@ function AdminProperties() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Property Name *
+                    Property Name
                   </label>
                   <input
                     type="text"
                     name="name"
                     value={addFormData.name}
                     onChange={(e) => handleInputChange(e, 'add')}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-violet-500"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location *
+                    Location
                   </label>
                   <input
                     type="text"
                     name="location"
                     value={addFormData.location}
                     onChange={(e) => handleInputChange(e, 'add')}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-violet-500"
                   />
                 </div>
@@ -683,84 +810,82 @@ function AdminProperties() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Property Type *
+                    Property Type
                   </label>
                   <select
                     name="property_type"
                     value={addFormData.property_type}
                     onChange={(e) => handleInputChange(e, 'add')}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-violet-500"
                   >
+                    <option value="">Select...</option>
                     <option value="Residential">Residential</option>
                     <option value="Commercial">Commercial</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Building Type *
+                    Building Type
                   </label>
                   <select
                     name="building_type"
                     value={addFormData.building_type}
                     onChange={(e) => handleInputChange(e, 'add')}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-violet-500"
                   >
+                    <option value="">Select...</option>
                     <option value="Apartment">Apartment</option>
-                    <option value="Independent House">Independent House</option>
                     <option value="Villa">Villa</option>
+                    <option value="Independent House">Independent House</option>
+                    <option value="Pent House">Pent House</option>
+                    <option value="Plot">Plot</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    BHK *
+                    BHK
                   </label>
                   <input
                     type="number"
                     name="bhk"
                     value={addFormData.bhk}
                     onChange={(e) => handleInputChange(e, 'add')}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-violet-500"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bathrooms *
+                    Bathrooms
                   </label>
                   <input
                     type="number"
                     name="bathrooms"
                     value={addFormData.bathrooms}
                     onChange={(e) => handleInputChange(e, 'add')}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-violet-500"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bedrooms *
+                    Bedrooms
                   </label>
                   <input
                     type="number"
                     name="bedrooms"
                     value={addFormData.bedrooms}
                     onChange={(e) => handleInputChange(e, 'add')}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-violet-500"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Size (sq.ft) *
+                    Size (sq.ft)
                   </label>
                   <input
                     type="number"
                     name="size"
                     value={addFormData.size}
                     onChange={(e) => handleInputChange(e, 'add')}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-violet-500"
                   />
                 </div>
@@ -835,18 +960,17 @@ function AdminProperties() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Listing Type *
+                    Listing Type
                   </label>
                   <select
                     name="listing_type"
                     value={addFormData.listing_type}
                     onChange={(e) => handleInputChange(e, 'add')}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-violet-500"
                   >
                     <option value="">Select Type</option>
                     <option value="Rent">Rent</option>
-                    <option value="Sale">Sale</option>
+                    <option value="Sell">Sell</option>
                   </select>
                 </div>
                 <div>
@@ -860,8 +984,8 @@ function AdminProperties() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-violet-500"
                   >
                     <option value="None">None</option>
-                    <option value="Semi-Furnished">Semi-Furnished</option>
-                    <option value="Fully-Furnished">Fully-Furnished</option>
+                    <option value="Semi">Semi</option>
+                    <option value="Full">Full</option>
                   </select>
                 </div>
                 <div>
@@ -875,9 +999,9 @@ function AdminProperties() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-violet-500"
                   >
                     <option value="Immediate">Immediate</option>
-                    <option value="15 Days">15 Days</option>
-                    <option value="30 Days">30 Days</option>
-                    <option value="60 Days">60 Days</option>
+                    <option value="Within 15 Days">Within 15 Days</option>
+                    <option value="Within 30 Days">Within 30 Days</option>
+                    <option value="After 30 Days">After 30 Days</option>
                   </select>
                 </div>
                 <div>
@@ -923,7 +1047,7 @@ function AdminProperties() {
                           type="file"
                           multiple
                           accept="image/*"
-                          onChange={handleFileSelect}
+                          onChange={(e) => handleFileSelect(e, 'add')}
                           className="sr-only"
                         />
                       </label>
@@ -1141,6 +1265,79 @@ function AdminProperties() {
                   rows="4"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-violet-500"
                 ></textarea>
+              </div>
+
+              {/* Existing Photos Display */}
+              {existingPhotos.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Existing Photos
+                  </label>
+                  <div className="grid grid-cols-4 gap-4 mb-4">
+                    {existingPhotos.map((photoUrl, index) => (
+                      <div key={`existing-${index}`} className="relative">
+                        <img
+                          src={propertyService.getImageUrl(photoUrl)}
+                          alt={`Existing photo ${index + 1}`}
+                          className="h-24 w-24 object-cover rounded-md"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveEditPhoto(index, false)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        >
+                          <XMarkIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* New Photos Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Add New Photos
+                </label>
+                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                  <div className="space-y-1 text-center">
+                    <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
+                    <div className="flex text-sm text-gray-600">
+                      <label className="relative cursor-pointer bg-white rounded-md font-medium text-violet-600 hover:text-violet-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-violet-500">
+                        <span>Upload files</span>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={(e) => handleFileSelect(e, 'edit')}
+                          className="sr-only"
+                        />
+                      </label>
+                      <p className="pl-1">or drag and drop</p>
+                    </div>
+                    <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                  </div>
+                </div>
+                {editPreviewUrls.length > 0 && (
+                  <div className="mt-4 grid grid-cols-4 gap-4">
+                    {editPreviewUrls.map((url, index) => (
+                      <div key={`new-${index}`} className="relative">
+                        <img
+                          src={url}
+                          alt={`New photo ${index + 1}`}
+                          className="h-24 w-24 object-cover rounded-md"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveEditPhoto(index, true)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        >
+                          <XMarkIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end space-x-3 pt-4">
