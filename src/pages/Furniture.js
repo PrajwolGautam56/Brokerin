@@ -400,7 +400,10 @@ function RequestModal({ furniture, mode, onClose, setError, setSuccess }) {
           <h3 className="font-medium text-gray-900 mb-2">{furniture.name}</h3>
           <p className="text-sm text-gray-600 mb-3">{furniture.description}</p>
           <p className="text-violet-600 font-bold text-lg">
-            {mode === 'buy' ? furniture.price : furniture.rentPrice}
+            {mode === 'buy' 
+              ? (furniture.price?.sell_price ? `₹${furniture.price.sell_price}` : 'Price on request')
+              : (furniture.price?.rent_monthly ? `₹${furniture.price.rent_monthly}/month` : 'Price on request')
+            }
           </p>
         </div>
 
