@@ -27,6 +27,26 @@ function FurnitureSection() {
         furnitureData = data;
       }
       
+      // Parse features for each furniture item to handle stringified JSON
+      furnitureData = furnitureData.map(item => {
+        if (item.features && typeof item.features === 'string') {
+          try {
+            const parsed = JSON.parse(item.features);
+            if (Array.isArray(parsed)) {
+              item.features = parsed;
+            }
+          } catch (e) {
+            // If parsing fails, try to split by comma if it's a plain string
+            if (item.features.includes(',')) {
+              item.features = item.features.split(',').map(f => f.trim()).filter(f => f);
+            } else {
+              item.features = [item.features];
+            }
+          }
+        }
+        return item;
+      });
+      
       setFurnitureItems(furnitureData.slice(0, 6));
     } catch (error) {
       console.error('Error fetching furniture:', error);
