@@ -144,6 +144,31 @@ function AdminFurniture() {
 
   const handleEdit = async (item) => {
     setEditingFurniture(item);
+    
+    // Parse features - handle array, stringified JSON, or plain string
+    let featuresString = '';
+    if (item.features) {
+      if (Array.isArray(item.features)) {
+        // Already an array
+        featuresString = item.features.join(', ');
+      } else if (typeof item.features === 'string') {
+        // Try to parse if it's a JSON string
+        try {
+          const parsed = JSON.parse(item.features);
+          if (Array.isArray(parsed)) {
+            featuresString = parsed.join(', ');
+          } else {
+            featuresString = item.features;
+          }
+        } catch (e) {
+          // Not JSON, use as-is
+          featuresString = item.features;
+        }
+      } else {
+        featuresString = String(item.features);
+      }
+    }
+    
     // Populate form with furniture data
     setFormData({
       name: item.name || '',
@@ -171,7 +196,7 @@ function AdminFurniture() {
       address_city: item.address?.city || '',
       address_state: item.address?.state || '',
       address_country: item.address?.country || 'India',
-      features: item.features ? (Array.isArray(item.features) ? item.features.join(', ') : item.features) : ''
+      features: featuresString
     });
     setIsEditModalOpen(true);
   };
