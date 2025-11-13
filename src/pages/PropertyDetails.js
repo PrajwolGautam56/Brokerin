@@ -318,12 +318,10 @@ function PropertyDetails() {
             </div>
 
             {/* Location */}
-            {property.location_coordinates && (
-              <div className="py-6 border-t border-gray-200">
-                <h2 className="text-xl font-semibold mb-4">Location</h2>
-                <PropertyMap property={property} />
-              </div>
-            )}
+            <div className="py-6 border-t border-gray-200">
+              <h2 className="text-xl font-semibold mb-4">Location</h2>
+              <PropertyMap property={property} height="500px" />
+            </div>
 
             {/* Contact Form */}
             <div className="py-6 border-t border-gray-200">

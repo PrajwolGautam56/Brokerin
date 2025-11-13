@@ -70,7 +70,7 @@ function Contact() {
                 <div className="ml-4">
                   <h3 className="text-lg font-medium">Our Office</h3>
                   <p className="text-gray-600 mt-1">
-                   Brigade Medows<br />
+                   Udayapalya<br />
                     Kanakapura Road
                   </p>
                 </div>

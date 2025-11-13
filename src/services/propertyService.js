@@ -286,43 +286,5 @@ export const propertyService = {
       console.error(`Property with ID ${id} does not exist:`, error);
       return false;
     }
-  },
-
-  submitServiceBooking: async (bookingData) => {
-    try {
-      const response = await api.post('/api/service-bookings', {
-        service_type: bookingData.service_type,
-        name: bookingData.name,
-        phone_number: bookingData.phone_number,
-        preferred_date: bookingData.preferred_date,
-        preferred_time: bookingData.preferred_time,
-        service_address: bookingData.service_address,
-        additional_notes: bookingData.additional_notes
-      });
-      
-      console.log('Service booking response:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error submitting service booking:', error);
-      throw error.response?.data || { message: 'Failed to submit service booking' };
-    }
-  },
-
-  submitContactForm: async (contactData) => {
-    try {
-      const response = await api.post('/api/contacts', {
-        fullname: contactData.name,
-        email: contactData.email,
-        phonenumber: contactData.phone,
-        subject: contactData.subject,
-        message: contactData.message
-      });
-      
-      console.log('Contact form response:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error submitting contact form:', error);
-      throw error.response?.data || { message: 'Failed to submit contact form' };
-    }
   }
 }; 

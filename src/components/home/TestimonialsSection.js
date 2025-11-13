@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { UserCircleIcon, StarIcon } from '@heroicons/react/24/solid';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
@@ -42,17 +42,33 @@ const testimonials = [
 
 function TestimonialsSection() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [itemsPerView, setItemsPerView] = useState(3);
+
+  useEffect(() => {
+    const updateItemsPerView = () => {
+      const width = window.innerWidth;
+      if (width < 640) {
+        setItemsPerView(1);
+      } else if (width < 1024) {
+        setItemsPerView(2);
+      } else {
+        setItemsPerView(3);
+      }
+    };
+
+    updateItemsPerView();
+    window.addEventListener('resize', updateItemsPerView);
+    return () => window.removeEventListener('resize', updateItemsPerView);
+  }, []);
 
   const nextSlide = () => {
-    setCurrentIndex((prevIndex) => 
-      prevIndex === testimonials.length - 3 ? 0 : prevIndex + 1
-    );
+    const maxIndex = Math.max(0, testimonials.length - itemsPerView);
+    setCurrentIndex((prevIndex) => (prevIndex >= maxIndex ? 0 : prevIndex + 1));
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prevIndex) => 
-      prevIndex === 0 ? testimonials.length - 3 : prevIndex - 1
-    );
+    const maxIndex = Math.max(0, testimonials.length - itemsPerView);
+    setCurrentIndex((prevIndex) => (prevIndex === 0 ? maxIndex : prevIndex - 1));
   };
 
   return (
@@ -87,12 +103,12 @@ function TestimonialsSection() {
           <div className="overflow-hidden">
             <div 
               className="flex transition-transform duration-300 ease-in-out"
-              style={{ transform: `translateX(-${currentIndex * 33.33}%)` }}
+              style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}
             >
               {testimonials.map((testimonial) => (
                 <div
                   key={testimonial.id}
-                  className="w-1/3 flex-shrink-0 px-4"
+                  className="w-full sm:w-1/2 lg:w-1/3 flex-shrink-0 px-4"
                 >
                   <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow h-full">
                     <div className="flex items-center mb-4">
@@ -127,7 +143,7 @@ function TestimonialsSection() {
 
           {/* Dots Navigation */}
           <div className="flex justify-center mt-8 gap-2">
-            {[...Array(testimonials.length - 2)].map((_, index) => (
+            {[...Array(Math.max(1, testimonials.length - itemsPerView + 1))].map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index)}

@@ -15,7 +15,6 @@ function AdminProperties() {
   const [editSelectedFiles, setEditSelectedFiles] = useState([]);
   const [editPreviewUrls, setEditPreviewUrls] = useState([]);
   const [existingPhotos, setExistingPhotos] = useState([]);
-  const [successMessage, setSuccessMessage] = useState('');
 
   const initialFormData = {
     name: '',
@@ -272,13 +271,11 @@ function AdminProperties() {
       
       // Use the axios instance instead of fetch to ensure Authorization header is included
       // Axios will automatically set Content-Type to multipart/form-data for FormData
-      const response = await api.put(`/api/properties/${selectedProperty._id}`, formData);
+      await api.put(`/api/properties/${selectedProperty._id}`, formData);
       
       await fetchProperties(); // Refresh the list
       setIsEditModalOpen(false);
       resetForm('edit');
-      setSuccessMessage('Property updated successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error updating property:', error);
       let errorMessage = 'Failed to update property';
@@ -289,7 +286,7 @@ function AdminProperties() {
         errorMessage = 'Your session has expired. Please log in again.';
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        window.location.href = '/'; // Go to home, use navbar login popup
       } else if (error.response?.status === 400) {
         const errorData = error.response.data;
         if (errorData.message) {
@@ -324,7 +321,6 @@ function AdminProperties() {
   const handleInputChange = (e, formType = 'edit') => {
     const { name, value, type, checked } = e.target;
     const setFormData = formType === 'edit' ? setEditFormData : setAddFormData;
-    const currentFormData = formType === 'edit' ? editFormData : addFormData;
 
     if (name.startsWith('price.')) {
       const priceField = name.split('.')[1];
@@ -547,8 +543,6 @@ function AdminProperties() {
         setProperties(prev => [...prev, response.data]);
         setIsAddModalOpen(false);
         resetForm('add');
-        setSuccessMessage('Property added successfully!');
-        setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (error) {
       console.error('Error adding property:', error);
@@ -564,10 +558,10 @@ function AdminProperties() {
       
       if (error.response?.status === 401) {
         setError('Your session has expired. Please log in again.');
-        // Clear auth data and redirect
+        // Clear auth data and redirect to home
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        window.location.href = '/'; // Go to home, use navbar login popup
       } else if (error.response?.status === 400) {
         const errorData = error.response.data;
         console.error('=== 400 Error Details ===');
@@ -1278,7 +1272,7 @@ function AdminProperties() {
                       <div key={`existing-${index}`} className="relative">
                         <img
                           src={propertyService.getImageUrl(photoUrl)}
-                          alt={`Existing photo ${index + 1}`}
+                          alt={`Existing ${index + 1}`}
                           className="h-24 w-24 object-cover rounded-md"
                         />
                         <button
@@ -1324,7 +1318,7 @@ function AdminProperties() {
                       <div key={`new-${index}`} className="relative">
                         <img
                           src={url}
-                          alt={`New photo ${index + 1}`}
+                          alt={`New ${index + 1}`}
                           className="h-24 w-24 object-cover rounded-md"
                         />
                         <button

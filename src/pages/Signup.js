@@ -1,19 +1,20 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 
 function Signup() {
   const navigate = useNavigate();
-  const { login } = useAuth();
   const [formData, setFormData] = useState({
     fullName: '',
+    username: '',
     email: '',
     phoneNumber: '',
+    nationality: 'IN',
     password: '',
     confirmPassword: ''
   });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   const validatePhoneNumber = (phone) => {
@@ -25,9 +26,16 @@ function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
+
+    const trimmedFullName = formData.fullName?.trim();
+    const trimmedUsername = formData.username?.trim();
+    const trimmedEmail = formData.email?.trim();
+    const trimmedPhone = formData.phoneNumber?.trim();
+    const trimmedNationality = formData.nationality?.trim() || 'IN';
 
     // Validate form data
-    if (!formData.fullName || !formData.email || !formData.phoneNumber || !formData.password) {
+    if (!trimmedFullName || !trimmedEmail || !trimmedPhone || !formData.password) {
       setError('Please fill in all fields');
       return;
     }
@@ -38,11 +46,12 @@ function Signup() {
     }
 
     // Validate phone number format
-    if (!formData.phoneNumber.startsWith('+91')) {
-      formData.phoneNumber = '+91' + formData.phoneNumber;
+    let formattedPhone = trimmedPhone.replace(/\s+/g, '');
+    if (!formattedPhone.startsWith('+91')) {
+      formattedPhone = `+91${formattedPhone.replace(/^\+?91/, '')}`;
     }
 
-    if (!validatePhoneNumber(formData.phoneNumber)) {
+    if (!validatePhoneNumber(formattedPhone)) {
       setError('Please enter a valid Indian phone number (+91XXXXXXXXXX)');
       return;
     }
@@ -51,14 +60,17 @@ function Signup() {
 
     try {
       const response = await authService.signup({
-        fullName: formData.fullName,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
+        fullName: trimmedFullName,
+        username: trimmedUsername || trimmedFullName.toLowerCase().replace(/\s+/g, ''),
+        email: trimmedEmail,
+        phoneNumber: formattedPhone,
+        nationality: trimmedNationality,
         password: formData.password
       });
-      
-      login(response.user);
-      navigate('/');
+
+      const message = response?.message || 'Account created. Please verify the OTP sent to your email.';
+      setSuccess(message);
+      navigate('/verify-otp', { state: { email: trimmedEmail, message } });
     } catch (err) {
       console.error('Signup error:', err);
       setError(err.message || 'Failed to create account');
@@ -73,8 +85,9 @@ function Signup() {
       ...prev,
       [name]: value
     }));
-    // Clear error when user starts typing
+    // Clear feedback when user starts typing
     if (error) setError('');
+    if (success) setSuccess('');
   };
 
   return (
@@ -88,9 +101,9 @@ function Signup() {
         <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
           <h2 className="text-2xl font-bold text-center mb-8">Create Your Account</h2>
           
-          {error && (
-            <div className="bg-red-50 text-red-500 p-4 rounded-lg mb-6">
-              {error}
+          {(error || success) && (
+            <div className={`${error ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-600'} p-4 rounded-lg mb-6`}>
+              {error || success}
             </div>
           )}
 
@@ -108,6 +121,22 @@ function Signup() {
                 required
                 disabled={loading}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Username
+              </label>
+              <input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-violet-500 focus:border-violet-500"
+                placeholder="Choose a unique username"
+                disabled={loading}
+              />
+              <p className="mt-1 text-sm text-gray-500">We’ll auto-generate one if left blank.</p>
             </div>
 
             <div>
@@ -142,6 +171,26 @@ function Signup() {
                 />
               </div>
               <p className="mt-1 text-sm text-gray-500">Format: +91XXXXXXXXXX (Indian number)</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nationality
+              </label>
+              <select
+                name="nationality"
+                value={formData.nationality}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-violet-500 focus:border-violet-500"
+                disabled={loading}
+              >
+                <option value="IN">India</option>
+                <option value="US">United States</option>
+                <option value="AE">United Arab Emirates</option>
+                <option value="SG">Singapore</option>
+                <option value="AU">Australia</option>
+                <option value="UK">United Kingdom</option>
+              </select>
             </div>
 
             <div>

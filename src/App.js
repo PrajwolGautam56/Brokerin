@@ -14,6 +14,9 @@ import Contact from './pages/Contact';
 import { AuthProvider } from './context/AuthContext';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import VerifyOtp from './pages/VerifyOtp';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import PGHostels from './pages/PGHostels';
 import ScrollToTop from './components/common/ScrollToTop';
 import AdminLayout from './layouts/AdminLayout';
@@ -25,9 +28,14 @@ import FurnitureRequests from './pages/admin/FurnitureRequests';
 import AdminFurniture from './pages/admin/AdminFurniture';
 import AdminUsers from './pages/admin/AdminUsers';
 import ContactInquiries from './pages/admin/ContactInquiries';
+import RentalManagement from './pages/admin/RentalManagement';
+import RentalDashboard from './pages/admin/RentalDashboard';
+import TransactionManagement from './pages/admin/TransactionManagement';
 import UserDashboard from './pages/UserDashboard';
 import UserProfile from './pages/UserProfile';
 import MyServiceBookings from './pages/MyServiceBookings';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TransactionHistory from './pages/TransactionHistory';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
@@ -49,6 +57,9 @@ function App() {
                       <Route path="services" element={<ServiceRequests />} />
                       <Route path="property-requests" element={<PropertyRequests />} />
                       <Route path="furniture-requests" element={<FurnitureRequests />} />
+                      <Route path="rentals" element={<RentalManagement />} />
+                      <Route path="rental-dashboard" element={<RentalDashboard />} />
+                      <Route path="transactions" element={<TransactionManagement />} />
                       <Route path="users" element={<AdminUsers />} />
                       <Route path="enquiries" element={<ContactInquiries />} />
                       {/* Add more admin routes here */}
@@ -68,6 +79,23 @@ function App() {
               } />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/verify-otp" element={<VerifyOtp />} />
+              <Route path="/forgot-password" element={
+                <>
+                  <Navbar />
+                  <div className="h-24" />
+                  <ForgotPassword />
+                  <Footer />
+                </>
+              } />
+              <Route path="/reset-password" element={
+                <>
+                  <Navbar />
+                  <div className="h-24" />
+                  <ResetPassword />
+                  <Footer />
+                </>
+              } />
               <Route path="/properties" element={
                 <>
                   <Navbar />
@@ -116,6 +144,14 @@ function App() {
                   <Footer />
                 </>
               } />
+              <Route path="/privacy-policy" element={
+                <>
+                  <Navbar />
+                  <div className="h-24" />
+                  <PrivacyPolicy />
+                  <Footer />
+                </>
+              } />
               
               {/* Protected User Routes */}
               <Route path="/dashboard" element={
@@ -144,6 +180,16 @@ function App() {
                     <Navbar />
                     <div className="h-24" />
                     <MyServiceBookings />
+                    <Footer />
+                  </>
+                </ProtectedRoute>
+              } />
+              <Route path="/transactions" element={
+                <ProtectedRoute>
+                  <>
+                    <Navbar />
+                    <div className="h-24" />
+                    <TransactionHistory />
                     <Footer />
                   </>
                 </ProtectedRoute>
