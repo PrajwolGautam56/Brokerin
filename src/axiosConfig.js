@@ -87,13 +87,11 @@ api.interceptors.response.use(
           return api(originalRequest);
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
-          // Refresh failed - clear tokens and redirect to login
+          // Refresh failed - clear tokens, stay on current page
           tokenService.clearTokens();
           localStorage.removeItem('user');
           
-          if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
-          }
+          // Don't redirect - user stays on current page and can use navbar login
           return Promise.reject(refreshError);
         }
       }

@@ -13,7 +13,9 @@ import {
   Bars3Icon,
   XMarkIcon,
   ClipboardDocumentListIcon,
-  ShoppingBagIcon
+  ShoppingBagIcon,
+  KeyIcon,
+  CreditCardIcon
 } from '@heroicons/react/24/outline';
 
 const navigation = [
@@ -22,6 +24,9 @@ const navigation = [
   { name: 'Furniture', href: '/admin/furniture', icon: ShoppingBagIcon },
   { name: 'Property Requests', href: '/admin/property-requests', icon: ClipboardDocumentListIcon },
   { name: 'Furniture Requests', href: '/admin/furniture-requests', icon: ClipboardDocumentListIcon },
+  { name: 'Rental Management', href: '/admin/rentals', icon: KeyIcon },
+  { name: 'Rental Dashboard', href: '/admin/rental-dashboard', icon: ChartBarIcon },
+  { name: 'Transactions', href: '/admin/transactions', icon: CreditCardIcon },
   { name: 'Users', href: '/admin/users', icon: UserGroupIcon },
   { name: 'Services', href: '/admin/services', icon: WrenchScrewdriverIcon },
   { name: 'Enquiries', href: '/admin/enquiries', icon: ChatBubbleLeftIcon },
@@ -37,7 +42,7 @@ function AdminLayout({ children }) {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/', { replace: true }); // Go to home, don't redirect to login page
   };
 
   return (

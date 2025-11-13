@@ -58,7 +58,12 @@ function Login() {
       }
     } catch (err) {
       console.error('Login error in component:', err);
-      setError(err.message || 'Failed to login. Please check your credentials and try again.');
+      if (err.status === 403) {
+        setError('');
+        navigate('/verify-otp', { state: { email: loginData.email, message: err.message } });
+      } else {
+        setError(err.message || 'Failed to login. Please check your credentials and try again.');
+      }
       // Clear password field on error
       setFormData(prev => ({ ...prev, password: '' }));
     } finally {

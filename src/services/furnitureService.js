@@ -138,9 +138,24 @@ export const furnitureService = {
   getAllFurnitureRequests: async () => {
     try {
       const response = await api.get('/api/furniture-forms');
-      // Backend returns { success: true, data: [...], pagination: {...} }
+      console.log('Raw furniture requests API response:', response.data);
+      
+      // Backend returns { success: true, data: [...], pagination: {...}, validStatuses: [...] }
       const requests = response.data.data || response.data;
-      return Array.isArray(requests) ? { requests } : { requests: [] };
+      const result = Array.isArray(requests) ? { requests } : { requests: [] };
+      
+      // Include validStatuses if provided by backend
+      if (response.data.validStatuses) {
+        result.validStatuses = response.data.validStatuses;
+      }
+      
+      // Also check if validStatuses is at root level
+      if (response.data.validStatuses === undefined && response.validStatuses) {
+        result.validStatuses = response.validStatuses;
+      }
+      
+      console.log('Processed furniture requests result:', result);
+      return result;
     } catch (error) {
       console.error('Error fetching furniture requests:', error);
       throw error.response?.data || { message: 'Failed to fetch furniture requests' };
@@ -150,8 +165,8 @@ export const furnitureService = {
   // Admin: Update furniture request
   updateFurnitureRequest: async (id, requestData) => {
     try {
-      // If updating status, use status endpoint
-      if (requestData.status) {
+      // If updating status, payment_status, or scheduled_delivery_date, use status endpoint with PATCH
+      if (requestData.status || requestData.payment_status || requestData.scheduled_delivery_date) {
         const response = await api.patch(`/api/furniture-forms/${id}/status`, requestData);
         return response.data;
       }

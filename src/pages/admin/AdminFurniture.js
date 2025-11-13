@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { furnitureService } from '../../services/furnitureService';
-import { PencilIcon, TrashIcon, EyeIcon, XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 function AdminFurniture() {
   const [furniture, setFurniture] = useState([]);
@@ -120,9 +120,38 @@ function AdminFurniture() {
       if (formData.address_state) formDataToSend.append('address[state]', formData.address_state);
       formDataToSend.append('address[country]', formData.address_country);
 
-      // Features
+      // Features - ensure we don't double-stringify
       if (formData.features) {
-        const featuresArray = formData.features.split(',').map(f => f.trim()).filter(f => f);
+        // Split by comma and clean up - remove any nested JSON strings
+        const featuresArray = formData.features
+          .split(',')
+          .map(f => f.trim())
+          .filter(f => f)
+          .map(f => {
+            // If it's already a JSON string, parse it first to get the actual value
+            try {
+              const parsed = JSON.parse(f);
+              // If parsed is an array, get the first element (which might be another string)
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                const first = parsed[0];
+                // If first element is also a stringified JSON, parse again
+                if (typeof first === 'string') {
+                  try {
+                    const nested = JSON.parse(first);
+                    return Array.isArray(nested) ? nested[0] : nested;
+                  } catch {
+                    return first;
+                  }
+                }
+                return first;
+              }
+              return parsed;
+            } catch {
+              // Not JSON, use as-is
+              return f;
+            }
+          });
+        // Stringify only once
         formDataToSend.append('features', JSON.stringify(featuresArray));
       }
 
@@ -145,23 +174,61 @@ function AdminFurniture() {
   const handleEdit = async (item) => {
     setEditingFurniture(item);
     
-    // Parse features - handle array, stringified JSON, or plain string
+    // Parse features - handle array, stringified JSON (including nested), or plain string
     let featuresString = '';
     if (item.features) {
       if (Array.isArray(item.features)) {
-        // Already an array
-        featuresString = item.features.join(', ');
+        // Handle array - might contain stringified JSON strings
+        const extractedFeatures = [];
+        item.features.forEach(feature => {
+          if (typeof feature === 'string') {
+            // Try to parse if it's a JSON string
+            try {
+              const parsed = JSON.parse(feature);
+              if (Array.isArray(parsed)) {
+                // Nested array - extract all items
+                extractedFeatures.push(...parsed);
+              } else {
+                extractedFeatures.push(parsed);
+              }
+            } catch (e) {
+              // Not JSON, use as-is
+              extractedFeatures.push(feature);
+            }
+          } else {
+            extractedFeatures.push(feature);
+          }
+        });
+        featuresString = extractedFeatures.join(', ');
       } else if (typeof item.features === 'string') {
         // Try to parse if it's a JSON string
         try {
           const parsed = JSON.parse(item.features);
           if (Array.isArray(parsed)) {
-            featuresString = parsed.join(', ');
+            // Recursively parse nested arrays
+            const extractedFeatures = [];
+            parsed.forEach(f => {
+              if (typeof f === 'string') {
+                try {
+                  const nested = JSON.parse(f);
+                  if (Array.isArray(nested)) {
+                    extractedFeatures.push(...nested);
+                  } else {
+                    extractedFeatures.push(nested);
+                  }
+                } catch {
+                  extractedFeatures.push(f);
+                }
+              } else {
+                extractedFeatures.push(f);
+              }
+            });
+            featuresString = extractedFeatures.join(', ');
           } else {
-            featuresString = item.features;
+            featuresString = String(parsed);
           }
         } catch (e) {
-          // Not JSON, use as-is
+          // Not JSON, use as-is (comma-separated string)
           featuresString = item.features;
         }
       } else {
@@ -243,9 +310,38 @@ function AdminFurniture() {
       if (formData.address_state) formDataToSend.append('address[state]', formData.address_state);
       formDataToSend.append('address[country]', formData.address_country);
 
-      // Features
+      // Features - ensure we don't double-stringify
       if (formData.features) {
-        const featuresArray = formData.features.split(',').map(f => f.trim()).filter(f => f);
+        // Split by comma and clean up - remove any nested JSON strings
+        const featuresArray = formData.features
+          .split(',')
+          .map(f => f.trim())
+          .filter(f => f)
+          .map(f => {
+            // If it's already a JSON string, parse it first to get the actual value
+            try {
+              const parsed = JSON.parse(f);
+              // If parsed is an array, get the first element (which might be another string)
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                const first = parsed[0];
+                // If first element is also a stringified JSON, parse again
+                if (typeof first === 'string') {
+                  try {
+                    const nested = JSON.parse(first);
+                    return Array.isArray(nested) ? nested[0] : nested;
+                  } catch {
+                    return first;
+                  }
+                }
+                return first;
+              }
+              return parsed;
+            } catch {
+              // Not JSON, use as-is
+              return f;
+            }
+          });
+        // Stringify only once
         formDataToSend.append('features', JSON.stringify(featuresArray));
       }
 
@@ -491,7 +587,7 @@ function AdminFurniture() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Length</label>
                   <input type="number" name="dimensions_length" value={formData.dimensions_length} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
@@ -504,6 +600,14 @@ function AdminFurniture() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Height</label>
                   <input type="number" name="dimensions_height" value={formData.dimensions_height} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Unit</label>
+                  <select name="dimensions_unit" value={formData.dimensions_unit} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <option value="cm">cm</option>
+                    <option value="inches">inches</option>
+                    <option value="meters">meters</option>
+                  </select>
+                </div>
               </div>
 
               <div>
@@ -511,19 +615,61 @@ function AdminFurniture() {
                 <input type="text" name="features" value={formData.features} onChange={handleInputChange} placeholder="e.g., 3-seater, Leather, Reclining" className="w-full px-3 py-2 border border-gray-300 rounded-md" />
               </div>
 
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Age (Years)</label>
+                  <input type="number" name="age_years" value={formData.age_years} onChange={handleInputChange} min="0" className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                </div>
+                <div className="flex items-center">
+                  <input type="checkbox" name="delivery_available" checked={formData.delivery_available} onChange={handleInputChange} className="h-4 w-4 text-violet-600" />
+                  <label className="ml-2 block text-sm text-gray-900">Delivery Available</label>
+                </div>
+                {formData.delivery_available && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Charge (₹)</label>
+                    <input type="number" name="delivery_charge" value={formData.delivery_charge} onChange={handleInputChange} min="0" className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center">
+                  <input type="checkbox" name="warranty" checked={formData.warranty} onChange={handleInputChange} className="h-4 w-4 text-violet-600" />
+                  <label className="ml-2 block text-sm text-gray-900">Warranty Available</label>
+                </div>
+                {formData.warranty && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Warranty (Months)</label>
+                    <input type="number" name="warranty_months" value={formData.warranty_months} onChange={handleInputChange} min="0" className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Address Details</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Street</label>
+                    <input type="text" name="address_street" value={formData.address_street} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                    <input type="text" name="address_city" value={formData.address_city} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                    <input type="text" name="address_state" value={formData.address_state} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                    <input type="text" name="address_country" value={formData.address_country} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Photos (max 10)</label>
                 <input type="file" multiple accept="image/*" onChange={handleFileSelect} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
-              </div>
-
-              <div className="flex items-center">
-                <input type="checkbox" name="delivery_available" checked={formData.delivery_available} onChange={handleInputChange} className="h-4 w-4 text-violet-600" />
-                <label className="ml-2 block text-sm text-gray-900">Delivery Available</label>
-              </div>
-              
-              <div className="flex items-center">
-                <input type="checkbox" name="warranty" checked={formData.warranty} onChange={handleInputChange} className="h-4 w-4 text-violet-600" />
-                <label className="ml-2 block text-sm text-gray-900">Warranty Available</label>
               </div>
 
               <div className="flex justify-end gap-3 pt-4">
@@ -630,24 +776,89 @@ function AdminFurniture() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Length</label>
+                  <input type="number" name="dimensions_length" value={formData.dimensions_length} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Width</label>
+                  <input type="number" name="dimensions_width" value={formData.dimensions_width} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Height</label>
+                  <input type="number" name="dimensions_height" value={formData.dimensions_height} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Unit</label>
+                  <select name="dimensions_unit" value={formData.dimensions_unit} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <option value="cm">cm</option>
+                    <option value="inches">inches</option>
+                    <option value="meters">meters</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Features (comma-separated)</label>
                 <input type="text" name="features" value={formData.features} onChange={handleInputChange} placeholder="e.g., 3-seater, Leather, Reclining" className="w-full px-3 py-2 border border-gray-300 rounded-md" />
               </div>
 
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Age (Years)</label>
+                  <input type="number" name="age_years" value={formData.age_years} onChange={handleInputChange} min="0" className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                </div>
+                <div className="flex items-center">
+                  <input type="checkbox" name="delivery_available" checked={formData.delivery_available} onChange={handleInputChange} className="h-4 w-4 text-violet-600" />
+                  <label className="ml-2 block text-sm text-gray-900">Delivery Available</label>
+                </div>
+                {formData.delivery_available && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Charge (₹)</label>
+                    <input type="number" name="delivery_charge" value={formData.delivery_charge} onChange={handleInputChange} min="0" className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center">
+                  <input type="checkbox" name="warranty" checked={formData.warranty} onChange={handleInputChange} className="h-4 w-4 text-violet-600" />
+                  <label className="ml-2 block text-sm text-gray-900">Warranty Available</label>
+                </div>
+                {formData.warranty && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Warranty (Months)</label>
+                    <input type="number" name="warranty_months" value={formData.warranty_months} onChange={handleInputChange} min="0" className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Address Details</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Street</label>
+                    <input type="text" name="address_street" value={formData.address_street} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                    <input type="text" name="address_city" value={formData.address_city} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                    <input type="text" name="address_state" value={formData.address_state} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                    <input type="text" name="address_country" value={formData.address_country} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Update Photos (optional)</label>
                 <input type="file" multiple accept="image/*" onChange={handleFileSelect} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
-              </div>
-
-              <div className="flex items-center">
-                <input type="checkbox" name="delivery_available" checked={formData.delivery_available} onChange={handleInputChange} className="h-4 w-4 text-violet-600" />
-                <label className="ml-2 block text-sm text-gray-900">Delivery Available</label>
-              </div>
-              
-              <div className="flex items-center">
-                <input type="checkbox" name="warranty" checked={formData.warranty} onChange={handleInputChange} className="h-4 w-4 text-violet-600" />
-                <label className="ml-2 block text-sm text-gray-900">Warranty Available</label>
               </div>
 
               <div className="flex justify-end gap-3 pt-4">

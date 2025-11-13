@@ -3,11 +3,8 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/authService';
 
-// Test admin email - REMOVE IN PRODUCTION
-const ADMIN_EMAIL = 'admin@brokerin.com';
-
 function ProtectedRoute({ children }) {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -35,8 +32,8 @@ function ProtectedRoute({ children }) {
 
   // Check if user is authenticated
   if (!isAuthenticated()) {
-    // Redirect to login with the return url
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // Redirect to home and trigger login modal via state
+    return <Navigate to="/" state={{ from: location, showLogin: true }} replace />;
   }
 
   // Check if user is admin for admin routes

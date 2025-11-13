@@ -1,6 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Tab } from '@headlessui/react';
 import { furnitureService } from '../services/furnitureService';
+import { transactionService } from '../services/transactionService';
+import { paymentService } from '../services/paymentService';
+import RazorpayButton from '../components/payment/RazorpayButton';
 import { XMarkIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
@@ -11,36 +14,50 @@ function Furniture() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [furnitureItems, setFurnitureItems] = useState([]);
-  const [filters, setFilters] = useState({
+  const [filters] = useState({
     category: '',
     listingType: '',
     page: 1,
     limit: 12
   });
+  const abortControllerRef = useRef(null);
+  const lastRequestRef = useRef('');
 
-  useEffect(() => {
-    fetchFurniture();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, selectedTab]);
-
-  const fetchFurniture = async () => {
+  const fetchFurniture = useCallback(async () => {
+    // Cancel previous request if still pending
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Create new abort controller
+    abortControllerRef.current = new AbortController();
+    
+    // Create request signature to prevent duplicate calls
+    const requestKey = `${selectedTab}-${filters.category}-${filters.page}`;
+    if (lastRequestRef.current === requestKey) {
+      console.log('Skipping duplicate request:', requestKey);
+      return;
+    }
+    lastRequestRef.current = requestKey;
+    
     setLoading(true);
     setError(null);
     try {
-      // Build query params - use API filtering based on selected tab
+      // Build query params - don't filter by listingType on backend
+      // We'll filter client-side to ensure "Rent & Sell" items appear in both tabs
       const queryParams = {
-        status: 'Available', // Only show available items
+        status: 'Available',
         page: filters.page,
-        limit: 100 // Get more items to ensure we see them all
+        limit: 100
       };
-      
-      // Note: The API might not support listingType filter, so we'll filter client-side
-      // Try to get both types and filter based on what the API returns
       
       // Add category filter if selected
       if (filters.category) {
         queryParams.category = filters.category;
       }
+      
+      // Note: We don't send listingType to backend because items with "Rent & Sell"
+      // need to appear in both tabs, so we fetch all and filter client-side
       
       console.log('Fetching furniture with filters:', queryParams);
       console.log('Current tab:', selectedTab);
@@ -57,20 +74,53 @@ function Furniture() {
         furnitureData = data;
       }
       
-      // Parse features for each furniture item to handle stringified JSON
+      // Parse features for each furniture item to handle stringified JSON or arrays
       furnitureData = furnitureData.map(item => {
-        if (item.features && typeof item.features === 'string') {
-          try {
-            const parsed = JSON.parse(item.features);
-            if (Array.isArray(parsed)) {
-              item.features = parsed;
-            }
-          } catch (e) {
-            // If parsing fails, try to split by comma if it's a plain string
-            if (item.features.includes(',')) {
-              item.features = item.features.split(',').map(f => f.trim()).filter(f => f);
-            } else {
-              item.features = [item.features];
+        if (item.features) {
+          if (Array.isArray(item.features)) {
+            // Already an array - extract clean string values
+            item.features = item.features.map(f => {
+              // If feature is a string that looks like JSON, parse it
+              if (typeof f === 'string') {
+                try {
+                  const parsed = JSON.parse(f);
+                  // If parsed is an array, get the first element
+                  if (Array.isArray(parsed)) {
+                    return parsed[0] || f;
+                  }
+                  return parsed;
+                } catch {
+                  return f;
+                }
+              }
+              return String(f);
+            }).filter(f => f); // Remove empty values
+          } else if (typeof item.features === 'string') {
+            try {
+              const parsed = JSON.parse(item.features);
+              if (Array.isArray(parsed)) {
+                // Extract clean string values from array
+                item.features = parsed.map(f => {
+                  if (typeof f === 'string') {
+                    try {
+                      const nested = JSON.parse(f);
+                      return Array.isArray(nested) ? nested[0] : nested;
+                    } catch {
+                      return f;
+                    }
+                  }
+                  return String(f);
+                }).filter(f => f);
+              } else {
+                item.features = [String(parsed)];
+              }
+            } catch (e) {
+              // If parsing fails, try to split by comma if it's a plain string
+              if (item.features.includes(',')) {
+                item.features = item.features.split(',').map(f => f.trim()).filter(f => f);
+              } else {
+                item.features = [item.features];
+              }
             }
           }
         }
@@ -84,17 +134,27 @@ function Furniture() {
       if (selectedTab === 'rent') {
         furnitureData = furnitureData.filter(item => {
           const listingType = item.listingType || item.listing_type;
-          const isRentOrBoth = listingType === 'Rent' || listingType === 'Rent & Sell';
+          const isRent = listingType === 'Rent';
+          const isRentAndSell = listingType === 'Rent & Sell';
           const hasRentPrice = !!item.price?.rent_monthly;
-          console.log(`Item: ${item.name}, listingType: ${listingType}, isRentOrBoth: ${isRentOrBoth}, hasRentPrice: ${hasRentPrice}`);
-          return isRentOrBoth && hasRentPrice;
+          
+          // Show if: (Rent type with rent price) OR (Rent & Sell type - show in both tabs regardless of which price exists)
+          const shouldShow = (isRent && hasRentPrice) || isRentAndSell;
+          
+          console.log(`Item: ${item.name}, listingType: ${listingType}, isRent: ${isRent}, isRentAndSell: ${isRentAndSell}, hasRentPrice: ${hasRentPrice}, shouldShow: ${shouldShow}`);
+          return shouldShow;
         });
       } else if (selectedTab === 'buy') {
         furnitureData = furnitureData.filter(item => {
           const listingType = item.listingType || item.listing_type;
-          const isSellOrBoth = listingType === 'Sell' || listingType === 'Rent & Sell';
+          const isSell = listingType === 'Sell';
+          const isRentAndSell = listingType === 'Rent & Sell';
           const hasSellPrice = !!item.price?.sell_price;
-          return isSellOrBoth && hasSellPrice;
+          
+          // Show if: (Sell type with sell price) OR (Rent & Sell type - show in both tabs regardless of which price exists)
+          const shouldShow = (isSell && hasSellPrice) || isRentAndSell;
+          
+          return shouldShow;
         });
       }
       
@@ -107,13 +167,29 @@ function Furniture() {
         setError('No furniture items found. Please check back later.');
       }
     } catch (err) {
+      // Don't set error if request was aborted
+      if (err.name === 'AbortError' || abortControllerRef.current?.signal.aborted) {
+        console.log('Request aborted');
+        return;
+      }
       console.error('Error fetching furniture:', err);
       setError(err.response?.data?.message || err.message || 'Failed to load furniture items.');
       setFurnitureItems([]);
     } finally {
       setLoading(false);
+      abortControllerRef.current = null;
     }
-  };
+  }, [selectedTab, filters.category, filters.page]);
+
+  useEffect(() => {
+    fetchFurniture();
+    return () => {
+      // Cleanup: abort request on unmount or dependency change
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [fetchFurniture]);
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">

@@ -27,20 +27,53 @@ function FurnitureSection() {
         furnitureData = data;
       }
       
-      // Parse features for each furniture item to handle stringified JSON
+      // Parse features for each furniture item to handle stringified JSON or arrays
       furnitureData = furnitureData.map(item => {
-        if (item.features && typeof item.features === 'string') {
-          try {
-            const parsed = JSON.parse(item.features);
-            if (Array.isArray(parsed)) {
-              item.features = parsed;
-            }
-          } catch (e) {
-            // If parsing fails, try to split by comma if it's a plain string
-            if (item.features.includes(',')) {
-              item.features = item.features.split(',').map(f => f.trim()).filter(f => f);
-            } else {
-              item.features = [item.features];
+        if (item.features) {
+          if (Array.isArray(item.features)) {
+            // Already an array - extract clean string values
+            item.features = item.features.map(f => {
+              // If feature is a string that looks like JSON, parse it
+              if (typeof f === 'string') {
+                try {
+                  const parsed = JSON.parse(f);
+                  // If parsed is an array, get the first element
+                  if (Array.isArray(parsed)) {
+                    return parsed[0] || f;
+                  }
+                  return parsed;
+                } catch {
+                  return f;
+                }
+              }
+              return String(f);
+            }).filter(f => f); // Remove empty values
+          } else if (typeof item.features === 'string') {
+            try {
+              const parsed = JSON.parse(item.features);
+              if (Array.isArray(parsed)) {
+                // Extract clean string values from array
+                item.features = parsed.map(f => {
+                  if (typeof f === 'string') {
+                    try {
+                      const nested = JSON.parse(f);
+                      return Array.isArray(nested) ? nested[0] : nested;
+                    } catch {
+                      return f;
+                    }
+                  }
+                  return String(f);
+                }).filter(f => f);
+              } else {
+                item.features = [String(parsed)];
+              }
+            } catch (e) {
+              // If parsing fails, try to split by comma if it's a plain string
+              if (item.features.includes(',')) {
+                item.features = item.features.split(',').map(f => f.trim()).filter(f => f);
+              } else {
+                item.features = [item.features];
+              }
             }
           }
         }
