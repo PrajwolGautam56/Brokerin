@@ -64,7 +64,7 @@ export const getActivityHistory = async () => {
 // Get user's own furniture requests
 export const getMyFurnitureRequests = async () => {
   try {
-    const response = await api.get('/api/furniture-forms/me');
+    const response = await api.get('/api/users/furniture-requests');
     logger.log('Furniture requests fetched:', response.data);
     
     // Handle response structure: { success: true, data: [...], count: N }
@@ -86,6 +86,14 @@ export const getMyFurnitureRequests = async () => {
     };
   } catch (error) {
     logger.error('Error fetching furniture requests:', error);
+    
+    // Handle specific error cases
+    if (error.response?.status === 401) {
+      logger.warn('Authentication required for furniture requests');
+    } else if (error.response?.status === 403) {
+      logger.warn('Access denied for furniture requests');
+    }
+    
     // Return empty structure instead of throwing to prevent UI errors
     return {
       success: false,
@@ -96,15 +104,43 @@ export const getMyFurnitureRequests = async () => {
   }
 };
 
-// Get property requests
+// Get user's own property requests
 export const getMyPropertyRequests = async () => {
   try {
-    const response = await api.get('/api/property-requests');
+    const response = await api.get('/api/users/property-requests');
     logger.log('Property requests fetched:', response.data);
-    return response.data;
+    
+    // Handle response structure: { success: true, data: [...], count: N }
+    if (response.data.success && response.data.data) {
+      return {
+        success: true,
+        data: Array.isArray(response.data.data) ? response.data.data : [],
+        count: response.data.count || 0
+      };
+    }
+    
+    // Fallback for different response structures
+    return {
+      success: true,
+      data: response.data.data || response.data || [],
+      count: response.data.count || (Array.isArray(response.data.data) ? response.data.data.length : 0)
+    };
   } catch (error) {
     logger.error('Error fetching property requests:', error);
-    throw error.response?.data || { message: 'Failed to fetch property requests' };
+    
+    // Handle specific error cases
+    if (error.response?.status === 401) {
+      logger.warn('Authentication required for property requests');
+    } else if (error.response?.status === 403) {
+      logger.warn('Access denied for property requests');
+    }
+    
+    // Return empty structure instead of throwing to prevent UI errors
+    return {
+      success: false,
+      data: [],
+      count: 0
+    };
   }
 };
 

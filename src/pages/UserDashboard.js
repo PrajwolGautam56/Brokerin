@@ -5,6 +5,7 @@ import { userService } from '../services/userService';
 import { rentalService } from '../services/rentalService';
 import { paymentService } from '../services/paymentService';
 import { furnitureService } from '../services/furnitureService';
+import { getMyFurnitureRequests } from '../services/userDashboardService';
 import MonthlyPaymentCard from '../components/payment/MonthlyPaymentCard';
 import RazorpayButton from '../components/payment/RazorpayButton';
 import { UserIcon, EnvelopeIcon, KeyIcon, CreditCardIcon } from '@heroicons/react/24/outline';
@@ -29,7 +30,9 @@ function UserDashboard() {
 
   const fetchFurnitureRequests = async () => {
     try {
-      const response = await furnitureService.getAllFurnitureRequests();
+      // Use user-specific endpoint instead of admin endpoint
+      const response = await getMyFurnitureRequests();
+      // Handle response structure: { success: true, data: [...], count: N, requests: [...] }
       const requests = response.data || response.requests || response || [];
       setFurnitureRequests(Array.isArray(requests) ? requests : []);
     } catch (err) {

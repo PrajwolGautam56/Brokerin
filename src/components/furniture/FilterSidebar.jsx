@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 function FilterSidebar({ filters, onFilterChange, onClearFilters }) {
   const [priceRange, setPriceRange] = useState({
@@ -6,13 +6,22 @@ function FilterSidebar({ filters, onFilterChange, onClearFilters }) {
     max: filters.maxPrice || ''
   });
 
+  // Sync price range with filters prop when it changes externally (e.g., clear filters)
+  useEffect(() => {
+    setPriceRange({
+      min: filters.minPrice || '',
+      max: filters.maxPrice || ''
+    });
+  }, [filters.minPrice, filters.maxPrice]);
+
   const handlePriceChange = (type, value) => {
     const newPriceRange = { ...priceRange, [type]: value };
     setPriceRange(newPriceRange);
     
+    // Update filters immediately
     onFilterChange({
-      minPrice: newPriceRange.min,
-      maxPrice: newPriceRange.max
+      minPrice: newPriceRange.min || '',
+      maxPrice: newPriceRange.max || ''
     });
   };
 

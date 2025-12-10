@@ -70,7 +70,7 @@ function AdminFurniture() {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : (type === 'number' ? (value === '' ? '' : Number(value)) : value)
     }));
   };
 
@@ -90,6 +90,13 @@ function AdminFurniture() {
       return;
     }
 
+    // Validate stock value
+    const stockValue = parseInt(formData.stock);
+    if (isNaN(stockValue) || stockValue < 0) {
+      setError('Stock must be a valid number greater than or equal to 0.');
+      return;
+    }
+
     try {
       const formDataToSend = new FormData();
       
@@ -102,7 +109,9 @@ function AdminFurniture() {
       formDataToSend.append('listing_type', formData.listing_type);
       formDataToSend.append('availability', formData.availability);
       formDataToSend.append('status', formData.status);
-      formDataToSend.append('stock', formData.stock);
+      // Ensure stock is sent as a number
+      const stockValue = parseInt(formData.stock) || 1;
+      formDataToSend.append('stock', stockValue);
       formDataToSend.append('location', formData.location);
       formDataToSend.append('zipcode', formData.zipcode);
 
@@ -286,6 +295,13 @@ function AdminFurniture() {
     setError(null);
     setSuccess('');
 
+    // Validate stock value
+    const stockValue = parseInt(formData.stock);
+    if (isNaN(stockValue) || stockValue < 0) {
+      setError('Stock must be a valid number greater than or equal to 0.');
+      return;
+    }
+
     try {
       const formDataToSend = new FormData();
       
@@ -298,7 +314,9 @@ function AdminFurniture() {
       formDataToSend.append('listing_type', formData.listing_type);
       formDataToSend.append('availability', formData.availability);
       formDataToSend.append('status', formData.status);
-      formDataToSend.append('stock', formData.stock);
+      // Ensure stock is sent as a number
+      const stockValue = parseInt(formData.stock) || 1;
+      formDataToSend.append('stock', stockValue);
       formDataToSend.append('location', formData.location);
       formDataToSend.append('zipcode', formData.zipcode);
 
@@ -582,167 +600,192 @@ function AdminFurniture() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Furniture Management</h1>
-        <button 
-          onClick={() => setIsAddModalOpen(true)}
-          className="bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700"
-        >
-          Add New Furniture
-        </button>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-2">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Furniture Management</h1>
+            <p className="text-sm text-gray-600 mt-1">Manage your furniture inventory and stock levels</p>
+          </div>
+          <button 
+            onClick={() => setIsAddModalOpen(true)}
+            className="bg-violet-600 text-white px-6 py-3 rounded-lg hover:bg-violet-700 transition-colors font-medium shadow-md hover:shadow-lg"
+          >
+            + Add New Furniture
+          </button>
+        </div>
       </div>
 
       {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
-          {success}
+        <div className="bg-green-50 border-2 border-green-300 text-green-800 px-4 py-3 rounded-lg mb-6 shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">✓</span>
+            <span>{success}</span>
+          </div>
         </div>
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-          {error}
+        <div className="bg-red-50 border-2 border-red-300 text-red-800 px-4 py-3 rounded-lg mb-6 shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">✗</span>
+            <span>{error}</span>
+          </div>
         </div>
       )}
 
-      {/* Furniture Grid */}
+      {/* Furniture Grid - Improved Layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {furniture.map((item) => (
-          <div key={item._id} className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="relative h-48">
+          <div key={item._id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden border border-gray-200">
+            {/* Image Section */}
+            <div className="relative h-56 bg-gray-100">
               {item.photos && item.photos.length > 0 ? (
                 <img src={item.photos[0]} alt={item.name} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-gray-200 flex items-center justify-center">No Image</div>
+                <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                  <span className="text-gray-400 text-sm">No Image</span>
+                </div>
               )}
-              <div className="absolute top-2 right-2">
-                <span className="bg-violet-500 text-white px-2 py-1 rounded text-xs">
+              <div className="absolute top-3 left-3">
+                <span className="bg-violet-600 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md">
                   {item.category}
                 </span>
               </div>
             </div>
-            <div className="p-4">
-              <h3 className="font-semibold text-lg text-gray-900 mb-2">{item.name}</h3>
-              <p className="text-sm text-gray-600 mb-2">{item.description}</p>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600">{item.item_type}</span>
-                <span className="text-sm text-gray-600">{item.condition}</span>
+
+            {/* Content Section */}
+            <div className="p-5 space-y-4">
+              {/* Title and Basic Info */}
+              <div>
+                <h3 className="font-bold text-lg text-gray-900 mb-1 line-clamp-1">{item.name}</h3>
+                <p className="text-xs text-gray-500 mb-2 line-clamp-2 min-h-[2.5rem]">{item.description}</p>
+                <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
+                  <span className="font-medium">{item.item_type}</span>
+                  <span className="px-2 py-0.5 bg-gray-100 rounded">{item.condition}</span>
+                </div>
               </div>
-              {item.listing_type === 'Rent' && (
-                <p className="text-violet-600 font-bold">₹{item.price?.rent_monthly}/month</p>
-              )}
-              {item.listing_type === 'Sell' && (
-                <p className="text-violet-600 font-bold">₹{item.price?.sell_price}</p>
-              )}
-              {item.listing_type === 'Rent & Sell' && (
-                <div>
-                  <p className="text-violet-600 font-bold">Rent: ₹{item.price?.rent_monthly}/month</p>
-                  <p className="text-violet-600 font-bold">Buy: ₹{item.price?.sell_price}</p>
-                </div>
-              )}
-              
-              {/* Availability, Status, and Stock Quick Update */}
-              <div className="grid grid-cols-3 gap-2 mt-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Availability</label>
-                  <select
-                    value={item.availability || 'Available'}
-                    onChange={(e) => handleStatusUpdate(item._id, 'availability', e.target.value)}
-                    className={`w-full px-2 py-1.5 text-xs border rounded-md ${
-                      item.availability === 'Available' 
-                        ? 'bg-green-50 text-green-700 border-green-300' 
-                        : 'bg-red-50 text-red-700 border-red-300'
-                    }`}
+
+              {/* Price */}
+              <div className="border-t border-gray-200 pt-3">
+                {item.listing_type === 'Rent' && (
+                  <p className="text-violet-600 font-bold text-lg">₹{item.price?.rent_monthly || 0}/month</p>
+                )}
+                {item.listing_type === 'Sell' && (
+                  <p className="text-violet-600 font-bold text-lg">₹{item.price?.sell_price || 0}</p>
+                )}
+                {item.listing_type === 'Rent & Sell' && (
+                  <div className="space-y-1">
+                    <p className="text-violet-600 font-bold text-base">Rent: ₹{item.price?.rent_monthly || 0}/mo</p>
+                    <p className="text-violet-600 font-bold text-base">Buy: ₹{item.price?.sell_price || 0}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Stock Section - Prominent */}
+              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                <label className="block text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Stock</label>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleStockOperation(item._id, 'subtract', 1)}
+                    className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors font-bold text-sm shadow-sm"
+                    title="Decrease by 1"
                   >
-                    <option value="Available">Available</option>
-                    <option value="Rented">Rented</option>
-                    <option value="Sold">Sold</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
-                  <select
-                    value={item.status || 'Available'}
-                    onChange={(e) => handleStatusUpdate(item._id, 'status', e.target.value)}
-                    className={`w-full px-2 py-1.5 text-xs border rounded-md ${
-                      item.status === 'Available' 
-                        ? 'bg-green-50 text-green-700 border-green-300' 
-                        : 'bg-red-50 text-red-700 border-red-300'
-                    }`}
-                  >
-                    <option value="Available">Available</option>
-                    <option value="Rented">Rented</option>
-                    <option value="Sold">Sold</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Stock</label>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => handleStockOperation(item._id, 'subtract', 1)}
-                      className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 border border-red-300"
-                      title="Decrease by 1"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      min="0"
-                      value={stockValues[item._id] !== undefined ? stockValues[item._id] : (item.stock || 0)}
-                      onChange={(e) => {
-                        const newValue = e.target.value;
-                        setStockValues(prev => ({ ...prev, [item._id]: newValue }));
-                      }}
-                      onBlur={(e) => {
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    min="0"
+                    value={stockValues[item._id] !== undefined ? stockValues[item._id] : (item.stock || 0)}
+                    onChange={(e) => {
+                      const newValue = e.target.value;
+                      setStockValues(prev => ({ ...prev, [item._id]: newValue }));
+                    }}
+                    onBlur={(e) => {
+                      const newValue = parseInt(e.target.value) || 0;
+                      if (newValue !== (item.stock || 0)) {
+                        handleStatusUpdate(item._id, 'stock', newValue);
+                      }
+                      setStockValues(prev => {
+                        const updated = { ...prev };
+                        delete updated[item._id];
+                        return updated;
+                      });
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
                         const newValue = parseInt(e.target.value) || 0;
                         if (newValue !== (item.stock || 0)) {
                           handleStatusUpdate(item._id, 'stock', newValue);
                         }
-                        // Reset local state after save
-                        setStockValues(prev => {
-                          const updated = { ...prev };
-                          delete updated[item._id];
-                          return updated;
-                        });
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const newValue = parseInt(e.target.value) || 0;
-                          if (newValue !== (item.stock || 0)) {
-                            handleStatusUpdate(item._id, 'stock', newValue);
-                          }
-                          e.target.blur();
-                        }
-                      }}
-                      className={`flex-1 px-2 py-1.5 text-xs border rounded-md text-center ${
-                        (item.stock || 0) > 0 
-                          ? 'bg-blue-50 text-blue-700 border-blue-300' 
-                          : 'bg-yellow-50 text-yellow-700 border-yellow-300'
-                      }`}
-                    />
-                    <button
-                      onClick={() => handleStockOperation(item._id, 'add', 1)}
-                      className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 border border-green-300"
-                      title="Increase by 1"
-                    >
-                      +
-                    </button>
-                  </div>
+                        e.target.blur();
+                      }
+                    }}
+                    className={`flex-1 px-3 py-2 text-center font-bold text-base border-2 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 ${
+                      (item.stock || 0) > 0 
+                        ? 'bg-blue-50 text-blue-700 border-blue-400' 
+                        : 'bg-yellow-50 text-yellow-700 border-yellow-400'
+                    }`}
+                  />
+                  <button
+                    onClick={() => handleStockOperation(item._id, 'add', 1)}
+                    className="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors font-bold text-sm shadow-sm"
+                    title="Increase by 1"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Status and Availability - Stacked */}
+              <div className="space-y-2">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Availability</label>
+                  <select
+                    value={item.availability || 'Available'}
+                    onChange={(e) => handleStatusUpdate(item._id, 'availability', e.target.value)}
+                    className={`w-full px-3 py-2 text-sm font-medium border-2 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 ${
+                      item.availability === 'Available' 
+                        ? 'bg-green-50 text-green-800 border-green-400' 
+                        : 'bg-red-50 text-red-800 border-red-400'
+                    }`}
+                  >
+                    <option value="Available">Available</option>
+                    <option value="Rented">Rented</option>
+                    <option value="Sold">Sold</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Status</label>
+                  <select
+                    value={item.status || 'Available'}
+                    onChange={(e) => handleStatusUpdate(item._id, 'status', e.target.value)}
+                    className={`w-full px-3 py-2 text-sm font-medium border-2 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 ${
+                      item.status === 'Available' 
+                        ? 'bg-green-50 text-green-800 border-green-400' 
+                        : 'bg-red-50 text-red-800 border-red-400'
+                    }`}
+                  >
+                    <option value="Available">Available</option>
+                    <option value="Rented">Rented</option>
+                    <option value="Sold">Sold</option>
+                  </select>
                 </div>
               </div>
               
-              <div className="flex gap-2 mt-4">
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-2 border-t border-gray-200">
                 <button
                   onClick={() => handleEdit(item)}
-                  className="flex-1 bg-violet-100 text-violet-700 px-3 py-2 rounded hover:bg-violet-200 text-sm flex items-center justify-center gap-1"
+                  className="flex-1 bg-violet-600 text-white px-4 py-2.5 rounded-md hover:bg-violet-700 transition-colors text-sm font-medium flex items-center justify-center gap-2 shadow-sm"
                 >
                   <PencilIcon className="w-4 h-4" />
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(item._id)}
-                  className="flex-1 bg-red-100 text-red-700 px-3 py-2 rounded hover:bg-red-200 text-sm flex items-center justify-center gap-1"
+                  className="flex-1 bg-red-600 text-white px-4 py-2.5 rounded-md hover:bg-red-700 transition-colors text-sm font-medium flex items-center justify-center gap-2 shadow-sm"
                 >
                   <TrashIcon className="w-4 h-4" />
                   Delete
@@ -753,9 +796,19 @@ function AdminFurniture() {
         ))}
       </div>
 
-      {furniture.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-lg">
-          <p className="text-gray-500">No furniture items found</p>
+      {furniture.length === 0 && !loading && (
+        <div className="text-center py-16 bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="max-w-md mx-auto">
+            <div className="text-6xl mb-4">📦</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No furniture items found</h3>
+            <p className="text-gray-600 mb-6">Get started by adding your first furniture item</p>
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="bg-violet-600 text-white px-6 py-3 rounded-lg hover:bg-violet-700 transition-colors font-medium"
+            >
+              Add Your First Item
+            </button>
+          </div>
         </div>
       )}
 

@@ -36,6 +36,8 @@ import RentalDashboard from './pages/admin/RentalDashboard';
 import TransactionManagement from './pages/admin/TransactionManagement';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminFurnitureInquiries from './pages/admin/AdminFurnitureInquiries';
+import Analytics from './pages/admin/Analytics';
+import Settings from './pages/admin/Settings';
 import UserDashboard from './pages/UserDashboard';
 import UserProfile from './pages/UserProfile';
 import MyServiceBookings from './pages/MyServiceBookings';
@@ -71,6 +73,8 @@ function App() {
                       <Route path="transactions" element={<TransactionManagement />} />
                       <Route path="users" element={<AdminUsers />} />
                       <Route path="enquiries" element={<ContactInquiries />} />
+                      <Route path="analytics" element={<Analytics />} />
+                      <Route path="settings" element={<Settings />} />
                       {/* Add more admin routes here */}
                     </Routes>
                   </AdminLayout>

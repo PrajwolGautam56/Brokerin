@@ -7,7 +7,8 @@ import logger from './utils/logger';
 const isProduction = process.env.NODE_ENV === 'production';
 
 // In development, use empty baseURL to leverage proxy in package.json
-// In production, use REACT_APP_API_BASE_URL from environment variables
+// In production, MUST use REACT_APP_API_BASE_URL from environment variables
+// Note: Proxy in package.json only works in development, not in production builds
 const baseURL = process.env.REACT_APP_API_BASE_URL || (isProduction ? '' : '');
 
 const api = axios.create({

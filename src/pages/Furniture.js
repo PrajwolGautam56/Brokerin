@@ -186,7 +186,7 @@ function Furniture() {
       logger.log('Filtered furniture from API:', furnitureData);
       logger.log('Item count before filtering:', furnitureData.length);
       
-      // Filter by listingType and ensure price exists
+      // Filter by listingType and ensure price exists (Tab-based filtering)
       if (selectedTab === 'rent') {
         furnitureData = furnitureData.filter(item => {
           const listingType = item.listingType || item.listing_type;
@@ -217,8 +217,18 @@ function Furniture() {
       logger.log('After filtering by listingType:', furnitureData);
       logger.log('Item count after filtering:', furnitureData.length);
       
-      // Client-side filtering for listingType (if specified in filters)
-      // Note: This is in addition to tab-based filtering, so it further narrows down results
+      // Client-side filtering - Apply ALL filters to ensure they work
+      
+      // 1. Category filter (client-side as fallback)
+      if (filters.category && filters.category !== '') {
+        furnitureData = furnitureData.filter(item => {
+          const itemCategory = (item.category || '').trim();
+          return itemCategory.toLowerCase() === filters.category.toLowerCase();
+        });
+        logger.log('After category filter:', furnitureData.length);
+      }
+      
+      // 2. Listing Type filter (additional to tab filter)
       if (filters.listingType && filters.listingType !== '') {
         furnitureData = furnitureData.filter(item => {
           const listingType = item.listingType || item.listing_type;
@@ -229,17 +239,45 @@ function Furniture() {
           }
           return listingType === filters.listingType || listingType === 'Rent & Sell';
         });
+        logger.log('After listingType filter:', furnitureData.length);
       }
       
+      // 3. Condition filter (client-side as fallback)
+      if (filters.condition && filters.condition !== '') {
+        furnitureData = furnitureData.filter(item => {
+          const itemCondition = (item.condition || '').trim();
+          return itemCondition.toLowerCase() === filters.condition.toLowerCase();
+        });
+        logger.log('After condition filter:', furnitureData.length);
+      }
       
-      // Client-side filtering for price range (if backend doesn't support it)
+      // 4. Status/Availability filter (client-side as fallback)
+      if (filters.status && filters.status !== '') {
+        furnitureData = furnitureData.filter(item => {
+          const itemStatus = (item.status || '').trim().toLowerCase();
+          const itemAvailability = (item.availability || '').trim().toLowerCase();
+          const filterStatus = filters.status.trim().toLowerCase();
+          
+          // Check both status and availability fields
+          // Also check stock > 0 for "Available" status
+          if (filterStatus === 'available') {
+            const hasStock = (item.stock || item.stock_count || 0) > 0;
+            return (itemStatus === 'available' || itemAvailability === 'available') && hasStock;
+          }
+          
+          return itemStatus === filterStatus || itemAvailability === filterStatus;
+        });
+        logger.log('After status filter:', furnitureData.length);
+      }
+      
+      // 5. Price range filter (client-side)
       if (filters.minPrice || filters.maxPrice) {
         furnitureData = furnitureData.filter(item => {
           const price = selectedTab === 'rent' 
             ? item.price?.rent_monthly 
             : item.price?.sell_price;
           
-          if (!price) return false;
+          if (!price || price === 0) return false;
           
           const itemPrice = Number(price);
           const minPrice = filters.minPrice ? Number(filters.minPrice) : 0;
@@ -247,6 +285,7 @@ function Furniture() {
           
           return itemPrice >= minPrice && itemPrice <= maxPrice;
         });
+        logger.log('After price filter:', furnitureData.length);
       }
       
       // Client-side sorting
