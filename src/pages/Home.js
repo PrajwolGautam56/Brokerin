@@ -21,11 +21,13 @@ function Home() {
       {/* Featured Properties */}
       <FeaturedProperties />
 
-      {/* Services Section */}
-      <ServicesSection />
+    
 
       {/* Furniture Section */}
       <FurnitureSection />
+
+      {/* Services Section */}
+      <ServicesSection />
 
       {/* Features/Why Choose Us Section */}
       <FeaturesSection />

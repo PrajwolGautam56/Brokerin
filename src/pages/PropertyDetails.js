@@ -1,13 +1,15 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import logger from '../utils/logger';
 import { useState, useEffect } from 'react';
-import { MapPinIcon, HomeIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { MapPinIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import PropertyMap from '../components/property/PropertyMap';
 import { propertyService } from '../services/propertyService';
+import AmenityIcon from '../components/common/AmenityIcon';
 
 function PropertyDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,6 +29,7 @@ function PropertyDetails() {
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
     fetchProperty();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {
@@ -190,21 +193,19 @@ function PropertyDetails() {
     }
   };
 
-  const getRandomBgColor = () => {
-    const colors = [
-      'bg-violet-100',
-      'bg-violet-200',
-      'bg-purple-100',
-      'bg-purple-200',
-      'bg-indigo-100',
-      'bg-indigo-200'
-    ];
-    return colors[Math.floor(Math.random() * colors.length)];
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-6 flex items-center text-violet-600 hover:text-violet-700 font-medium transition-colors"
+        >
+          <ChevronLeftIcon className="h-5 w-5 mr-1" />
+          <span>Back to Properties</span>
+        </button>
+        
         {/* Image Gallery */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8 relative">
           <div className="relative h-[60vh]">
@@ -300,20 +301,25 @@ function PropertyDetails() {
             {/* Amenities */}
             <div className="py-6 border-t border-gray-200">
               <h2 className="text-xl font-semibold mb-4">Amenities</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {property.amenities?.length > 0 ? (
-                  property.amenities.map((amenity, index) => (
-                    <div 
-                      key={index} 
-                      className={`${getRandomBgColor()} rounded-lg p-3 flex items-center justify-center text-center`}
-                    >
-                      <span className="text-violet-800 font-medium">
-                        {amenity.trim().toUpperCase()}
-                      </span>
-                    </div>
-                  ))
+                  property.amenities.map((amenity, index) => {
+                    const amenityName = amenity.trim();
+                    const normalizedName = amenityName.toLowerCase().replace(/\s+/g, '');
+                    return (
+                      <div 
+                        key={index} 
+                        className="bg-violet-50 hover:bg-violet-100 rounded-lg p-4 flex flex-col items-center justify-center text-center transition-colors border border-violet-200"
+                      >
+                        <AmenityIcon name={normalizedName} className="w-6 h-6 text-violet-600 mb-2" />
+                        <span className="text-violet-800 font-medium text-sm">
+                          {amenityName}
+                        </span>
+                      </div>
+                    );
+                  })
                 ) : (
-                  <div className="text-gray-500">No amenities listed</div>
+                  <div className="text-gray-500 col-span-full">No amenities listed</div>
                 )}
               </div>
             </div>

@@ -277,7 +277,7 @@ function Properties() {
   return (
     <div className="min-h-screen">
       {/* Header Section - White */}
-      <div className="bg-white pt-32 pb-6">
+      <div className="bg-white pt-2 pb-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900">
@@ -292,7 +292,7 @@ function Properties() {
       </div>
 
       {/* Filters Section - Light Gray */}
-      <div className="bg-gray-50 py-6">
+      <div className="bg-gray-50 py-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Filter Section */}
           <div className="relative">
@@ -513,7 +513,7 @@ function Properties() {
       </div>
 
       {/* Properties Grid - White */}
-      <div className="bg-white py-8">
+      <div className="bg-white py-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Properties Grid */}
           <div className="mt-4">

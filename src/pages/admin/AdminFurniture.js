@@ -56,8 +56,13 @@ function AdminFurniture() {
     setLoading(true);
     setError(null);
     try {
-      const response = await furnitureService.getAllFurniture();
+      // Fetch all furniture items for admin (no pagination limit)
+      const response = await furnitureService.getAllFurniture({
+        page: 1,
+        limit: 1000 // High limit to get all items for admin
+      });
       setFurniture(response.furniture || []);
+      logger.log('Fetched furniture items:', response.furniture?.length || 0);
     } catch (error) {
       logger.error('Error fetching furniture:', error);
       setError('Failed to load furniture');
