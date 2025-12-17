@@ -42,6 +42,8 @@ import UserDashboard from './pages/UserDashboard';
 import UserProfile from './pages/UserProfile';
 import MyServiceBookings from './pages/MyServiceBookings';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsAndConditions from './pages/TermsAndConditions';
+import RefundPolicy from './pages/RefundPolicy';
 import TransactionHistory from './pages/TransactionHistory';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import OrderTracking from './pages/OrderTracking';
@@ -178,6 +180,22 @@ function App() {
                   <Navbar />
                   <div className="h-24" />
                   <PrivacyPolicy />
+                  <Footer />
+                </>
+              } />
+              <Route path="/terms" element={
+                <>
+                  <Navbar />
+                  <div className="h-24" />
+                  <TermsAndConditions />
+                  <Footer />
+                </>
+              } />
+              <Route path="/refund-policy" element={
+                <>
+                  <Navbar />
+                  <div className="h-24" />
+                  <RefundPolicy />
                   <Footer />
                 </>
               } />

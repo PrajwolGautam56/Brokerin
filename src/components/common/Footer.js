@@ -203,7 +203,7 @@ function Footer() {
             <p className="text-gray-300 text-sm">
               © {new Date().getFullYear()} <span className="font-bold text-white">BrokerIn</span>. All rights reserved.
             </p>
-            <div className="flex gap-6">
+            <div className="flex flex-wrap gap-4 md:gap-6 justify-center md:justify-end">
               <Link 
                 to="/privacy-policy" 
                 className="text-gray-300 hover:text-white text-sm transition-colors duration-200 hover:underline"
@@ -215,6 +215,12 @@ function Footer() {
                 className="text-gray-300 hover:text-white text-sm transition-colors duration-200 hover:underline"
               >
                 Terms of Service
+              </Link>
+              <Link 
+                to="/refund-policy" 
+                className="text-gray-300 hover:text-white text-sm transition-colors duration-200 hover:underline"
+              >
+                Refund Policy
               </Link>
             </div>
           </div>

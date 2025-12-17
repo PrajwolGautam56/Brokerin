@@ -16,10 +16,16 @@ export default function FurnitureCartDrawer({ open, onClose, onProceed }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="flex-1 bg-black/40" onClick={onClose}></div>
-      <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col">
-        <div className="flex items-center justify-between px-4 py-3 border-b">
+    <>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/40 z-[100]" 
+        onClick={onClose}
+      ></div>
+      {/* Cart Drawer */}
+      <div className="fixed top-0 right-0 w-full max-w-md bg-white shadow-2xl flex flex-col z-[101]" style={{ height: '100vh', maxHeight: '100vh' }}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-white" style={{ flexShrink: 0, minHeight: '70px' }}>
           <div>
             <h3 className="text-lg font-bold text-gray-900">Furniture Cart</h3>
             <p className="text-sm text-gray-500">{totalItems} item(s)</p>
@@ -29,7 +35,13 @@ export default function FurnitureCartDrawer({ open, onClose, onProceed }) {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {/* Scrollable Content Area */}
+        <div className="overflow-y-auto p-4 space-y-3 bg-white" style={{ 
+          flex: '1 1 auto',
+          minHeight: 0,
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch'
+        }}>
           {items.length === 0 ? (
             <p className="text-gray-500 text-center py-8">Your cart is empty</p>
           ) : (
@@ -89,7 +101,7 @@ export default function FurnitureCartDrawer({ open, onClose, onProceed }) {
           )}
         </div>
 
-        <div className="border-t p-4 space-y-3">
+        <div className="border-t p-4 space-y-3 flex-shrink-0 bg-white">
           <div className="flex items-center justify-between text-sm text-gray-700">
             <span>Subtotal</span>
             <span className="font-bold text-gray-900">{formatPrice(subtotal)}</span>
@@ -118,7 +130,7 @@ export default function FurnitureCartDrawer({ open, onClose, onProceed }) {
           <p className="text-xs text-gray-500">* Pricing is indicative. Team will confirm final quote.</p>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
