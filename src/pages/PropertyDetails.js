@@ -307,15 +307,15 @@ function PropertyDetails() {
                     const amenityName = amenity.trim();
                     const normalizedName = amenityName.toLowerCase().replace(/\s+/g, '');
                     return (
-                      <div 
-                        key={index} 
+                    <div 
+                      key={index} 
                         className="bg-violet-50 hover:bg-violet-100 rounded-lg p-4 flex flex-col items-center justify-center text-center transition-colors border border-violet-200"
-                      >
+                    >
                         <AmenityIcon name={normalizedName} className="w-6 h-6 text-violet-600 mb-2" />
                         <span className="text-violet-800 font-medium text-sm">
                           {amenityName}
-                        </span>
-                      </div>
+                      </span>
+                    </div>
                     );
                   })
                 ) : (

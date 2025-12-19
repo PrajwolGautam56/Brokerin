@@ -2,14 +2,19 @@ import api from '../axiosConfig';
 import logger from '../utils/logger';
 
 export const orderService = {
-  // Get user's orders
-  getMyOrders: async (status = '', page = 1, limit = 10) => {
+  // Get all orders (Admin) - cart orders only
+  getAllOrders: async (filters = {}) => {
     try {
-      const params = new URLSearchParams({ page, limit });
-      if (status) params.append('status', status);
-      
-      const response = await api.get(`/api/rentals/my-rentals?${params.toString()}`);
-      logger.log('Orders fetched:', response.data);
+      const queryParams = new URLSearchParams();
+      if (filters.order_status) queryParams.append('order_status', filters.order_status);
+      if (filters.customer_email) queryParams.append('customer_email', filters.customer_email);
+      if (filters.search) queryParams.append('search', filters.search);
+      if (filters.page) queryParams.append('page', filters.page);
+      if (filters.limit) queryParams.append('limit', filters.limit);
+      if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
+      if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
+
+      const response = await api.get(`/api/orders${queryParams.toString() ? '?' + queryParams.toString() : ''}`);
       return response.data;
     } catch (error) {
       logger.error('Error fetching orders:', error);
@@ -17,45 +22,85 @@ export const orderService = {
     }
   },
 
-  // Get single order by ID
-  getOrderById: async (orderId) => {
+  // Get order by ID
+  getOrderById: async (id) => {
     try {
-      const response = await api.get(`/api/rentals/${orderId}`);
-      logger.log('Order fetched:', response.data);
+      const response = await api.get(`/api/orders/${id}`);
       return response.data;
     } catch (error) {
       logger.error('Error fetching order:', error);
-      throw error.response?.data || { message: 'Failed to fetch order details' };
+      throw error.response?.data || { message: 'Failed to fetch order' };
     }
   },
 
-  // Cancel an order
-  cancelOrder: async (orderId, reason) => {
+  // Update order status (Admin)
+  updateOrderStatus: async (orderId, orderStatus, deliveryDate = null, notes = null) => {
     try {
-      const response = await api.put(`/api/rentals/${orderId}/order-status`, {
-        order_status: 'Cancelled',
-        notes: reason
-      });
-      logger.log('Order cancelled:', response.data);
+      const payload = { order_status: orderStatus };
+      if (deliveryDate) payload.delivery_date = deliveryDate;
+      if (notes) payload.notes = notes;
+      
+      const response = await api.put(`/api/orders/${orderId}/order-status`, payload);
       return response.data;
     } catch (error) {
-      logger.error('Error cancelling order:', error);
-      throw error.response?.data || { message: 'Failed to cancel order' };
+      logger.error('Error updating order status:', error);
+      throw error.response?.data || { message: 'Failed to update order status' };
     }
   },
 
-  // Get order tracking info
-  getOrderTracking: async (orderId) => {
+  // Quick action: Confirm order (Admin)
+  confirmOrder: async (orderId) => {
     try {
-      const response = await api.get(`/api/rentals/${orderId}/tracking`);
-      logger.log('Order tracking fetched:', response.data);
+      const response = await api.post(`/api/orders/${orderId}/confirm`, {});
       return response.data;
     } catch (error) {
-      logger.error('Error fetching order tracking:', error);
-      throw error.response?.data || { message: 'Failed to fetch tracking info' };
+      logger.error('Error confirming order:', error);
+      throw error.response?.data || { message: 'Failed to confirm order' };
+    }
+  },
+
+  // Quick action: Mark as out for delivery (Admin)
+  markOutForDelivery: async (orderId, deliveryDate = null) => {
+    try {
+      const payload = deliveryDate ? { delivery_date: deliveryDate } : {};
+      const response = await api.post(`/api/orders/${orderId}/out-for-delivery`, payload);
+      return response.data;
+    } catch (error) {
+      logger.error('Error marking order as out for delivery:', error);
+      throw error.response?.data || { message: 'Failed to mark order as out for delivery' };
+    }
+  },
+
+  // Quick action: Mark as delivered (Admin)
+  markDelivered: async (orderId) => {
+    try {
+      const response = await api.post(`/api/orders/${orderId}/delivered`, {});
+      return response.data;
+    } catch (error) {
+      logger.error('Error marking order as delivered:', error);
+      throw error.response?.data || { message: 'Failed to mark order as delivered' };
+    }
+  },
+
+  // Delete order (Admin)
+  deleteOrder: async (orderId) => {
+    try {
+      const response = await api.delete(`/api/orders/${orderId}`);
+      return response.data;
+    } catch (error) {
+      logger.error('Error deleting order:', error);
+      throw error.response?.data || { message: 'Failed to delete order' };
+    }
+  },
+
+  // Get order status statistics (Admin)
+  getOrderStats: async () => {
+    try {
+      const response = await api.get('/api/orders/order-stats');
+      return response.data;
+    } catch (error) {
+      logger.error('Error fetching order stats:', error);
+      throw error.response?.data || { message: 'Failed to fetch order stats' };
     }
   }
 };
-
-export default orderService;
-

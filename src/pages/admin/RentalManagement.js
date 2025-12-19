@@ -8,11 +8,9 @@ import {
   XMarkIcon,
   CalendarIcon,
   CurrencyDollarIcon,
-  UserIcon,
   EnvelopeIcon,
   PhoneIcon,
-  CheckCircleIcon,
-  XCircleIcon
+  CheckCircleIcon
 } from '@heroicons/react/24/outline';
 
 const STATUS_TYPES = ['Active', 'Completed', 'Cancelled', 'On Hold'];
@@ -117,7 +115,9 @@ function RentalManagement() {
       // Fetch all rentals without pagination to get accurate counts
       const allFilters = { limit: 1000 }; // Large limit to get all
       const allResponse = await rentalService.getAllRentals(allFilters);
-      const allRentals = allResponse.data || allResponse.rentals || allResponse || [];
+      const allRentalsRaw = allResponse.data || allResponse.rentals || allResponse || [];
+      // Exclude cart orders so Rental Management remains offline-focused
+      const allRentals = allRentalsRaw.filter(r => r.order_source !== 'cart');
       
       counts.All = allRentals.length;
       statusTypes.forEach(status => {
@@ -484,8 +484,8 @@ function RentalManagement() {
     }
   };
 
-  // With pagination, rentals are already filtered by the API
-  const filteredRentals = rentals;
+  // Exclude cart-created rentals from Rental Management view (keep all others, including old ones)
+  const filteredRentals = rentals.filter(r => r.order_source !== 'cart');
 
   if (loading && rentals.length === 0) {
     return (

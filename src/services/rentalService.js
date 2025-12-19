@@ -8,6 +8,7 @@ export const rentalService = {
       const queryParams = new URLSearchParams();
       if (filters.status) queryParams.append('status', filters.status);
       if (filters.order_status) queryParams.append('order_status', filters.order_status);
+      if (filters.order_source) queryParams.append('order_source', filters.order_source);
       if (filters.customer_email) queryParams.append('customer_email', filters.customer_email);
       if (filters.search) queryParams.append('search', filters.search);
       if (filters.page) queryParams.append('page', filters.page);

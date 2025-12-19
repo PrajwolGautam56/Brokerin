@@ -25,7 +25,6 @@ const navigation = [
   { name: 'Orders', href: '/admin/orders', icon: ShoppingBagIcon },
   { name: 'Property Requests', href: '/admin/property-requests', icon: ClipboardDocumentListIcon },
   { name: 'Furniture Requests', href: '/admin/furniture-requests', icon: ClipboardDocumentListIcon },
-  { name: 'Furniture Inquiries', href: '/admin/furniture-inquiries', icon: ChatBubbleLeftIcon },
   { name: 'Rental Management', href: '/admin/rentals', icon: KeyIcon },
   { name: 'Rental Dashboard', href: '/admin/rental-dashboard', icon: ChartBarIcon },
   { name: 'Transactions', href: '/admin/transactions', icon: CreditCardIcon },

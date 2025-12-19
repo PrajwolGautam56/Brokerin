@@ -35,7 +35,6 @@ import RentalManagement from './pages/admin/RentalManagement';
 import RentalDashboard from './pages/admin/RentalDashboard';
 import TransactionManagement from './pages/admin/TransactionManagement';
 import AdminOrders from './pages/admin/AdminOrders';
-import AdminFurnitureInquiries from './pages/admin/AdminFurnitureInquiries';
 import Analytics from './pages/admin/Analytics';
 import Settings from './pages/admin/Settings';
 import UserDashboard from './pages/UserDashboard';
@@ -69,7 +68,6 @@ function App() {
                       <Route path="property-requests" element={<PropertyRequests />} />
                       <Route path="furniture-requests" element={<FurnitureRequests />} />
                       <Route path="orders" element={<AdminOrders />} />
-                      <Route path="furniture-inquiries" element={<AdminFurnitureInquiries />} />
                       <Route path="rentals" element={<RentalManagement />} />
                       <Route path="rental-dashboard" element={<RentalDashboard />} />
                       <Route path="transactions" element={<TransactionManagement />} />

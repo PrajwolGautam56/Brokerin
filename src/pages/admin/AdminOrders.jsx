@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { rentalService } from '../../services/rentalService';
+import { orderService } from '../../services/orderService';
 import { formatPrice } from '../../utils/priceFormatter';
 import logger from '../../utils/logger';
 import toast from 'react-hot-toast';
@@ -42,9 +42,9 @@ function AdminOrders() {
       if (searchQuery) filters.search = searchQuery;
 
       logger.log('Fetching orders with filters:', filters);
-      logger.log('Using endpoint: /api/rentals');
+      logger.log('Using endpoint: /api/orders');
       
-      const response = await rentalService.getAllRentals(filters);
+      const response = await orderService.getAllOrders(filters);
       
       logger.log('Orders API response:', response);
       logger.log('Response type:', typeof response);
@@ -82,45 +82,8 @@ function AdminOrders() {
         }
       }
 
-      // Filter for BUY orders only (listing_type = 'Sell' or all items have listing_type = 'Sell')
-      const filteredOrders = ordersData.filter(order => {
-        // Check if order has items
-        if (order.items && order.items.length > 0) {
-          // Check each item's listing_type
-          const allItemsAreBuy = order.items.every(item => {
-            const listingType = item.listing_type || item.listingType || item.type;
-            logger.log('Item listing_type check:', { 
-              listing_type: item.listing_type, 
-              listingType: item.listingType, 
-              type: item.type,
-              result: listingType === 'Sell' || listingType === 'buy' || listingType === 'Buy'
-            });
-            return listingType === 'Sell' || listingType === 'buy' || listingType === 'Buy';
-          });
-          logger.log('Order filter result (items):', { orderId: order.rental_id, allItemsAreBuy });
-          return allItemsAreBuy;
-        }
-        // If no items, check order-level listing_type
-        const orderListingType = order.listing_type || order.listingType;
-        const isBuyOrder = orderListingType === 'Sell' || orderListingType === 'buy' || orderListingType === 'Buy';
-        logger.log('Order filter result (no items):', { orderId: order.rental_id, orderListingType, isBuyOrder });
-        return isBuyOrder;
-      });
-
-      logger.log('Filtered BUY orders:', filteredOrders);
-      logger.log('Total orders before filter:', ordersData.length);
-      logger.log('Total orders after filter:', filteredOrders.length);
-
-      // Temporarily show all orders if filter returns empty (for debugging)
-      // Check browser console to see the actual order structure
-      if (filteredOrders.length === 0 && ordersData.length > 0) {
-        logger.warn('No BUY orders found after filtering. Temporarily showing ALL orders for debugging.');
-        logger.warn('Check console logs above to see order structure and adjust filter accordingly.');
-        // Temporarily show all orders - remove this after fixing the filter
-        ordersData = ordersData;
-      } else {
-        ordersData = filteredOrders;
-      }
+      // Orders from Order API are already cart orders (separate collection)
+      // No need to filter by order_source
       
       logger.log('Pagination:', pagination);
 
@@ -131,7 +94,7 @@ function AdminOrders() {
       logger.error('Error fetching orders:', error);
       logger.error('Error details:', error.response?.data || error.message);
       logger.error('Error status:', error.response?.status);
-      logger.error('Error endpoint:', '/api/rentals');
+      logger.error('Error endpoint:', '/api/orders');
       
       // Provide helpful error messages
       if (error.response?.status === 401) {
@@ -154,7 +117,7 @@ function AdminOrders() {
 
   const handleStatusUpdate = async (orderId, newStatus, additionalData = {}) => {
     try {
-      await rentalService.updateOrderStatus(
+      await orderService.updateOrderStatus(
         orderId,
         newStatus,
         additionalData.delivery_date || null,
@@ -177,17 +140,17 @@ function AdminOrders() {
     try {
       switch (action) {
         case 'confirm':
-          await rentalService.confirmOrder(orderId);
+          await orderService.confirmOrder(orderId);
           toast.success('Order confirmed successfully');
           break;
         case 'out-for-delivery':
           const deliveryDate = prompt('Enter delivery date (YYYY-MM-DD):');
           if (!deliveryDate) return;
-          await rentalService.markOutForDelivery(orderId, deliveryDate);
+          await orderService.markOutForDelivery(orderId, deliveryDate);
           toast.success('Order marked as out for delivery');
           break;
         case 'delivered':
-          await rentalService.markDelivered(orderId);
+          await orderService.markDelivered(orderId);
           toast.success('Order marked as delivered');
           break;
         default:
@@ -207,7 +170,7 @@ function AdminOrders() {
     }
 
     try {
-      await rentalService.deleteRental(orderId);
+      await orderService.deleteOrder(orderId);
       toast.success('Order deleted successfully');
       fetchOrders();
       if (selectedOrder?._id === orderId) {
@@ -326,7 +289,7 @@ function AdminOrders() {
                   {orders.map((order) => (
                     <tr key={order._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{order.rental_id}</div>
+                        <div className="text-sm font-medium text-gray-900">{order.order_id}</div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm">
@@ -478,7 +441,7 @@ function AdminOrders() {
               <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
                 <div>
                   <p className="text-sm text-gray-600">Order ID</p>
-                  <p className="font-semibold">{selectedOrder.rental_id}</p>
+                  <p className="font-semibold">{selectedOrder.order_id}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Order Date</p>
