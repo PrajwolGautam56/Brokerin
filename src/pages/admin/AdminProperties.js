@@ -577,10 +577,13 @@ function AdminProperties() {
       
       // Add price fields only if they have values
       if (addFormData.price.rent_monthly && !isNaN(addFormData.price.rent_monthly)) {
-      formData.append('price[rent_monthly]', Number(addFormData.price.rent_monthly));
+        formData.append('price[rent_monthly]', Number(addFormData.price.rent_monthly));
+      }
+      if (addFormData.price.sell_price && !isNaN(addFormData.price.sell_price)) {
+        formData.append('price[sell_price]', Number(addFormData.price.sell_price));
       }
       if (addFormData.price.deposit && !isNaN(addFormData.price.deposit)) {
-      formData.append('price[deposit]', Number(addFormData.price.deposit));
+        formData.append('price[deposit]', Number(addFormData.price.deposit));
       }
       
       // Add address fields

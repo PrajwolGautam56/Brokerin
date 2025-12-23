@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import logger from '../../utils/logger';
 import { Link } from 'react-router-dom';
 import { propertyService } from '../../services/propertyService';
+import { formatPrice, formatPriceWithSuffix } from '../../utils/priceFormatter';
 
 export default function FeaturedProperties() {
   const [properties, setProperties] = useState([]);
@@ -174,8 +175,8 @@ export default function FeaturedProperties() {
                     </span>
                     <p className="text-xl md:text-2xl font-bold text-gray-900">
                       {property.listing_type === 'Rent'
-                        ? `₹${property.price?.rent_monthly?.toLocaleString('en-IN')}/mo`
-                        : `₹${property.price?.sell_price?.toLocaleString('en-IN')}`}
+                        ? formatPriceWithSuffix(property.price?.rent_monthly, '/month')
+                        : formatPrice(property.price?.sell_price)}
                     </p>
                   </div>
                   <div className="text-right">

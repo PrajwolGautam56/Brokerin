@@ -20,13 +20,12 @@ export const formatPrice = (amount, showCurrency = true) => {
   let formattedPrice = '';
   
   if (numAmount >= oneCrore) {
-    // Format in crores
+    // Format in crores with 2 decimal places for precision
     const crores = numAmount / oneCrore;
-    const croresRounded = crores.toFixed(1);
-    // Remove .0 if it's a whole number
-    formattedPrice = croresRounded.endsWith('.0') 
-      ? `${parseInt(croresRounded)}CR` 
-      : `${croresRounded}CR`;
+    const croresRounded = crores.toFixed(2);
+    // Remove trailing zeros and .0 if it's a whole number
+    const cleaned = croresRounded.replace(/\.?0+$/, '');
+    formattedPrice = `${cleaned}CR`;
   } else if (numAmount >= oneLakh) {
     // Format in lakhs
     const lakhs = numAmount / oneLakh;

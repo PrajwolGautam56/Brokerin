@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import logger from '../../utils/logger';
 import { useNavigate, Link } from 'react-router-dom';
 import { propertyService } from '../../services/propertyService';
+import { formatPrice, formatPriceWithSuffix } from '../../utils/priceFormatter';
 
 function Hero() {
   const navigate = useNavigate();
@@ -32,8 +33,8 @@ function Hero() {
             bathrooms: property.bathrooms || 0,
             location: property.location || 'Location not available',
             price: property.listing_type === 'Rent' 
-              ? `₹${property.price?.rent_monthly?.toLocaleString()}/month`
-              : `₹${property.price?.sell_price?.toLocaleString()}`,
+              ? formatPriceWithSuffix(property.price?.rent_monthly, '/month')
+              : formatPrice(property.price?.sell_price),
             status: property.status || 'Status not available',
             imageUrl: property.photos?.length > 0 
               ? propertyService.getImageUrl(property.photos[0])

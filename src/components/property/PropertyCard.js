@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { formatPrice, formatPriceWithSuffix } from '../../utils/priceFormatter';
 import { propertyService } from '../../services/propertyService';
 import { useState } from 'react';
 
@@ -132,8 +133,8 @@ function PropertyCard({ property }) {
             <span className="text-xs text-gray-500 block mb-1">Starting from</span>
             <span className="text-2xl font-extrabold gradient-text">
               {property.listing_type === 'Rent'
-                ? `₹${property.price?.rent_monthly?.toLocaleString()}/month`
-                : `₹${property.price?.sell_price?.toLocaleString()}`}
+                ? formatPriceWithSuffix(property.price?.rent_monthly, '/month')
+                : formatPrice(property.price?.sell_price)}
             </span>
           </div>
         </div>

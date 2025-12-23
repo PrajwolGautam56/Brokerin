@@ -283,7 +283,7 @@ function Navbar() {
             </button>
 
             {/* User Menu for Mobile */}
-            <div className="relative">
+            <div className="relative" data-user-menu>
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center text-gray-700 hover:text-gray-900 px-3 py-2 rounded-lg"
@@ -294,7 +294,10 @@ function Navbar() {
               
               {/* User Dropdown for Mobile */}
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl py-2 border border-gray-100 z-[101] animate-fade-in-up">
+                <div
+                  className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl py-2 border border-gray-100 z-[101] animate-fade-in-up"
+                  data-user-menu
+                >
                   {user ? (
                     <>
                       <div className="px-4 py-3 border-b border-gray-100">

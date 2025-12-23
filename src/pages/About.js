@@ -1,4 +1,3 @@
-import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { motion } from 'framer-motion';
 
 function About() {
@@ -135,7 +134,7 @@ function About() {
               {
                 name: "Santhosh Srinivas",
                 role: "Founder & CEO",
-                image: "/images/blank-profile.png"
+                image: "/owner.JPG"
               }
               /* {
                 name: "Roshan Vennavalli",
@@ -153,14 +152,12 @@ function About() {
                 whileHover={{ y: -5 }}
                 className="bg-white rounded-xl shadow-lg overflow-hidden"
               >
-                <div className="bg-gray-100 h-64 flex items-center justify-center">
-                  <svg 
-                    className="w-24 h-24 text-gray-400"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
+                <div className="bg-gray-100 h-64 flex items-center justify-center p-4">
+                  <img 
+                    src={member.image}
+                    alt={member.name}
+                    className="max-w-xs max-h-full w-auto h-auto object-contain rounded-lg"
+                  />
                 </div>
                 <div className="p-6 text-center">
                   <h3 className="font-semibold text-lg mb-1">{member.name}</h3>

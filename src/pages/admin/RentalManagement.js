@@ -62,6 +62,7 @@ function RentalManagement() {
 
   useEffect(() => {
     fetchRentals();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchRentals = async (page = 1, fetchCounts = false) => {
@@ -133,6 +134,7 @@ function RentalManagement() {
   useEffect(() => {
     setCurrentPage(1); // Reset to first page when filters change
     fetchRentals(1, true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeStatus, searchTerm]);
 
   // Handle page changes
@@ -495,134 +497,302 @@ function RentalManagement() {
     );
   }
 
+  // Calculate stats
+  const stats = {
+    total: allRentalsCount.All || totalRentals,
+    active: allRentalsCount.Active || 0,
+    completed: allRentalsCount.Completed || 0,
+    cancelled: allRentalsCount.Cancelled || 0,
+    onHold: allRentalsCount['On Hold'] || 0
+  };
+
   return (
-    <div className="p-6">
-      <div className="mb-6 flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Rental Management</h1>
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Animated Background Layers */}
+      <div className="fixed inset-0 -z-10">
+        {/* Base Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-50 via-purple-50/80 to-pink-50/60"></div>
+        
+        {/* Animated Gradient Orbs */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-violet-400/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-pink-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        
+        {/* Grid Pattern Overlay */}
+        <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+        
+        {/* Animated Dots Pattern */}
+        <div className="absolute inset-0 opacity-[0.04] bg-[radial-gradient(circle_at_2px_2px,_rgb(139,92,246)_1px,_transparent_0)] bg-[length:60px_60px] animate-[move_20s_linear_infinite]"></div>
+      </div>
+
+      {/* Modern Header with Enhanced Gradient */}
+      <div className="relative bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 shadow-2xl overflow-hidden">
+        {/* Animated Background Pattern */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_2px_2px,_white_1px,_transparent_0)] bg-[length:40px_40px] animate-[move_15s_linear_infinite]"></div>
+        </div>
+        
+        {/* Shimmer Effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_3s_infinite]"></div>
+        
+        <div className="relative max-w-7xl mx-auto px-6 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-2 drop-shadow-lg">
+                Rental Management
+              </h1>
+              <p className="text-violet-100 text-lg">Manage offline rentals and monthly payments</p>
+            </div>
         <button
           onClick={() => {
             resetForm();
             setShowModal(true);
           }}
-          className="flex items-center gap-2 bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700 transition-colors"
+              className="group relative flex items-center gap-3 bg-white text-violet-600 px-6 py-3.5 rounded-xl font-bold shadow-xl hover:shadow-2xl hover:scale-105 transform transition-all duration-300 overflow-hidden"
         >
-          <PlusIcon className="w-5 h-5" />
-          Add Rental
+              <div className="absolute inset-0 bg-gradient-to-r from-violet-100 to-purple-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <PlusIcon className="w-6 h-6 relative z-10" />
+              <span className="relative z-10">Add New Rental</span>
         </button>
       </div>
 
-      {/* Messages */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
-          <CheckCircleIcon className="w-5 h-5" />
-          {success}
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className="mb-6 space-y-4">
-        <div className="flex gap-4">
-          {/* Status Tabs */}
-          <div className="flex space-x-2 border-b border-gray-200 flex-1">
-            {['All', ...STATUS_TYPES].map((status) => (
-              <button
-                key={status}
-                onClick={() => setActiveStatus(status)}
-                className={`pb-2 px-4 ${
-                  activeStatus === status
-                    ? 'border-b-2 border-violet-500 text-violet-600'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {status}
-                <span className="ml-2 bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
-                  {allRentalsCount[status] !== undefined ? allRentalsCount[status] : (status === 'All' ? totalRentals : 0)}
-                </span>
-              </button>
-            ))}
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
+            <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 border border-white/30 shadow-xl">
+              <div className="text-white/80 text-sm font-medium mb-1">Total Rentals</div>
+              <div className="text-3xl font-extrabold text-white">{stats.total}</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 border border-white/30 shadow-xl">
+              <div className="text-white/80 text-sm font-medium mb-1">Active</div>
+              <div className="text-3xl font-extrabold text-white">{stats.active}</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 border border-white/30 shadow-xl">
+              <div className="text-white/80 text-sm font-medium mb-1">Completed</div>
+              <div className="text-3xl font-extrabold text-white">{stats.completed}</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 border border-white/30 shadow-xl">
+              <div className="text-white/80 text-sm font-medium mb-1">Cancelled</div>
+              <div className="text-3xl font-extrabold text-white">{stats.cancelled}</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 border border-white/30 shadow-xl">
+              <div className="text-white/80 text-sm font-medium mb-1">On Hold</div>
+              <div className="text-3xl font-extrabold text-white">{stats.onHold}</div>
+            </div>
           </div>
-        </div>
-
-        {/* Search */}
-        <div className="flex gap-4">
-          <input
-            type="text"
-            placeholder="Search by name, email, or phone..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent"
-          />
         </div>
       </div>
 
-      {/* Rentals List */}
-      <div className="space-y-4">
+      <div className="relative max-w-7xl mx-auto px-6 py-8 z-10">
+      {/* Messages */}
+      {error && (
+          <div className="mb-6 bg-gradient-to-r from-red-50 via-red-100 to-red-50 border-l-4 border-red-500 text-red-700 px-6 py-4 rounded-xl shadow-xl flex items-center gap-3 animate-slide-down backdrop-blur-sm">
+            <div className="flex-shrink-0 w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+              <XMarkIcon className="w-6 h-6 text-red-600" />
+            </div>
+            <div className="flex-1 font-semibold">{error}</div>
+            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 hover:scale-110 transform transition-all">
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+        </div>
+      )}
+      {success && (
+          <div className="mb-6 bg-gradient-to-r from-green-50 via-emerald-100 to-green-50 border-l-4 border-green-500 text-green-700 px-6 py-4 rounded-xl shadow-xl flex items-center gap-3 animate-slide-down backdrop-blur-sm">
+            <div className="flex-shrink-0 w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
+              <CheckCircleIcon className="w-6 h-6 text-green-600" />
+            </div>
+            <div className="flex-1 font-semibold">{success}</div>
+            <button onClick={() => setSuccess(null)} className="text-green-500 hover:text-green-700 hover:scale-110 transform transition-all">
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+        </div>
+      )}
+
+        {/* Modern Filters Section with Glassmorphism */}
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-6 mb-8 border border-white/50 relative overflow-hidden">
+          {/* Subtle gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-50/50 via-transparent to-purple-50/50 pointer-events-none"></div>
+          <div className="relative z-10">
+          {/* Status Tabs - Modern Design */}
+          <div className="flex flex-wrap gap-3 mb-6">
+            {['All', ...STATUS_TYPES].map((status) => {
+              const count = allRentalsCount[status] !== undefined ? allRentalsCount[status] : (status === 'All' ? totalRentals : 0);
+              const isActive = activeStatus === status;
+              return (
+              <button
+                key={status}
+                onClick={() => setActiveStatus(status)}
+                  className={`group relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 ${
+                    isActive
+                      ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-500/50'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                  <span className="relative z-10 flex items-center gap-2">
+                {status}
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                      isActive
+                        ? 'bg-white/30 text-white'
+                        : 'bg-violet-100 text-violet-700'
+                    }`}>
+                      {count}
+                </span>
+                  </span>
+                  {isActive && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  )}
+              </button>
+              );
+            })}
+        </div>
+
+            {/* Search Bar - Modern Design */}
+            <div className="relative">
+          <input
+            type="text"
+                placeholder="🔍 Search by name, email, phone, or rental ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-6 py-4 pl-14 bg-white/90 backdrop-blur-sm border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:ring-4 focus:ring-violet-100/50 focus:bg-white focus:shadow-lg transition-all duration-300 text-gray-900 placeholder-gray-400 font-medium shadow-sm hover:shadow-md"
+              />
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                <div className="w-8 h-8 bg-gradient-to-br from-violet-500 via-purple-600 to-pink-600 rounded-lg flex items-center justify-center shadow-lg">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+        </div>
+      </div>
+
+        {/* Rentals List - Modern Card Design */}
+        <div className="space-y-6">
         {filteredRentals.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg">
-            <p className="text-gray-500">No rentals found</p>
+            <div className="text-center py-20 bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border-2 border-dashed border-gray-300 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-violet-50/30 via-transparent to-purple-50/30"></div>
+              <div className="relative z-10">
+                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-violet-100 via-purple-100 to-pink-100 rounded-full flex items-center justify-center shadow-lg">
+                  <CalendarIcon className="w-12 h-12 text-violet-500" />
+                </div>
+                <p className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent mb-2">No rentals found</p>
+                <p className="text-gray-600">Try adjusting your filters or add a new rental</p>
+              </div>
           </div>
         ) : (
-          filteredRentals.map((rental) => {
+            filteredRentals.map((rental, index) => {
             const rentalId = rental._id || rental.id;
+              const statusColors = {
+                'Active': 'from-green-500 via-emerald-500 to-green-600',
+                'Completed': 'from-blue-500 via-cyan-500 to-blue-600',
+                'Cancelled': 'from-red-500 via-rose-500 to-red-600',
+                'On Hold': 'from-yellow-500 via-amber-500 to-yellow-600'
+              };
+              const statusBg = {
+                'Active': 'bg-green-50 border-green-200',
+                'Completed': 'bg-blue-50 border-blue-200',
+                'Cancelled': 'bg-red-50 border-red-200',
+                'On Hold': 'bg-yellow-50 border-yellow-200'
+              };
+              
             return (
               <div
                 key={rentalId}
-                className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-4 flex-wrap">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                  className="group relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl border border-white/50 overflow-hidden transition-all duration-500 transform hover:-translate-y-2 hover:scale-[1.01]"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  {/* Subtle gradient overlay on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-violet-50/0 via-purple-50/0 to-pink-50/0 group-hover:from-violet-50/30 group-hover:via-purple-50/20 group-hover:to-pink-50/30 transition-all duration-500 pointer-events-none"></div>
+                  <div className="relative z-10">
+                    {/* Card Header with Enhanced Gradient */}
+                    <div className={`relative bg-gradient-to-r ${statusColors[rental.status] || 'from-gray-500 to-gray-600'} p-6 text-white overflow-hidden`}>
+                      {/* Animated shimmer effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                      
+                      {/* Pattern overlay */}
+                      <div className="absolute inset-0 opacity-10">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_white_1px,_transparent_0)] bg-[length:20px_20px]"></div>
+                      </div>
+                      
+                      <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                          <h3 className="text-2xl font-extrabold mb-1 drop-shadow-lg">
                         {rental.rental_id || `Rental #${(rental._id || rental.id).slice(-6)}`}
                       </h3>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        rental.status === 'Active' ? 'bg-green-100 text-green-800' :
-                        rental.status === 'Completed' ? 'bg-blue-100 text-blue-800' :
-                        rental.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
+                          <p className="text-white/90 font-semibold">{rental.customer_name}</p>
+                        </div>
+                        <div className={`px-5 py-2.5 rounded-xl ${statusBg[rental.status] || 'bg-gray-50 border-gray-200'} border-2 shadow-lg backdrop-blur-sm`}>
+                          <span className={`font-bold text-sm ${
+                            rental.status === 'Active' ? 'text-green-700' :
+                            rental.status === 'Completed' ? 'text-blue-700' :
+                            rental.status === 'Cancelled' ? 'text-red-700' :
+                            'text-yellow-700'
                       }`}>
                         {rental.status}
                       </span>
                     </div>
-
-                    <div className="mb-3">
-                      <h4 className="text-sm font-medium text-gray-700 mb-1">Customer:</h4>
-                      <p className="text-sm text-gray-900 font-medium">{rental.customer_name}</p>
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                      <div className="flex items-center gap-2">
-                        <EnvelopeIcon className="w-5 h-5 text-gray-400" />
-                        <span className="text-sm text-gray-600">{rental.customer_email}</span>
+                    {/* Card Body */}
+                    <div className="p-6 relative">
+                      {/* Customer Info Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                      <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl p-4 border border-violet-100 group-hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <EnvelopeIcon className="w-5 h-5 text-white" />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <PhoneIcon className="w-5 h-5 text-gray-400" />
-                        <span className="text-sm text-gray-600">{rental.customer_phone}</span>
+                          <div>
+                            <div className="text-xs text-gray-500 font-medium mb-1">Email</div>
+                            <div className="text-sm font-semibold text-gray-900 truncate">{rental.customer_email}</div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <CalendarIcon className="w-5 h-5 text-gray-400" />
-                        <span className="text-sm text-gray-600">
+                      </div>
+                      </div>
+                      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-100 group-hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
+                            <PhoneIcon className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500 font-medium mb-1">Phone</div>
+                            <div className="text-sm font-semibold text-gray-900">{rental.customer_phone}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100 group-hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                            <CalendarIcon className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500 font-medium mb-1">Start Date</div>
+                            <div className="text-sm font-semibold text-gray-900">
                           {rental.start_date ? new Date(rental.start_date).toLocaleDateString() : 'N/A'}
-                        </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <CurrencyDollarIcon className="w-5 h-5 text-gray-400" />
-                        <span className="text-sm text-gray-600">
-                          ₹{rental.total_monthly_amount || 0}/month
-                        </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-4 border border-orange-100 group-hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg flex items-center justify-center">
+                            <CurrencyDollarIcon className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500 font-medium mb-1">Monthly Rent</div>
+                            <div className="text-sm font-semibold text-gray-900">
+                              ₹{rental.total_monthly_amount || 0}/mo
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
+                    {/* Address */}
                     {rental.customer_address && (
-                      <div className="mb-3">
-                        <p className="text-sm text-gray-600">
-                          <strong>Address:</strong> {
-                            rental.customer_address.street ? 
+                      <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <div className="text-xs text-gray-500 font-medium mb-1">Delivery Address</div>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {rental.customer_address.street ? 
                               `${rental.customer_address.street}, ${rental.customer_address.city}, ${rental.customer_address.state} ${rental.customer_address.zipcode}, ${rental.customer_address.country}` :
                               (typeof rental.customer_address === 'string' ? rental.customer_address : 'N/A')
                           }
@@ -630,36 +800,73 @@ function RentalManagement() {
                       </div>
                     )}
 
-                    {/* Items */}
+                    {/* Items - Modern Card Design */}
                     {rental.items && rental.items.length > 0 && (
-                      <div className="mb-3">
-                        <h4 className="text-sm font-medium text-gray-700 mb-2">Items:</h4>
-                        <div className="space-y-1">
+                      <div className="mb-6">
+                        <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                          <div className="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-600 rounded-full"></div>
+                          Rental Items ({rental.items.length})
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {rental.items.map((item, idx) => (
-                            <p key={idx} className="text-sm text-gray-600">
-                              • {item.product_name} ({item.product_type || 'Furniture'}) - ₹{item.monthly_price}/month
-                              {item.quantity > 1 && ` x ${item.quantity}`}
-                              {item.deposit > 0 && ` | Deposit: ₹${item.deposit}`}
-                            </p>
+                            <div key={idx} className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-4 border border-gray-200 hover:border-violet-300 hover:shadow-md transition-all">
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <h5 className="font-bold text-gray-900 mb-1">{item.product_name}</h5>
+                                  <span className="text-xs px-2 py-1 bg-violet-100 text-violet-700 rounded-full font-medium">
+                                    {item.product_type || 'Furniture'}
+                                  </span>
+                        </div>
+                                {item.quantity > 1 && (
+                                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold">
+                                    x{item.quantity}
+                                  </span>
+                    )}
+                              </div>
+                    <div className="flex gap-4 text-sm">
+                      <div>
+                                  <span className="text-gray-500">Monthly:</span>
+                                  <span className="ml-1 font-bold text-violet-600">₹{item.monthly_price}</span>
+                      </div>
+                                {item.deposit > 0 && (
+                      <div>
+                                    <span className="text-gray-500">Deposit:</span>
+                                    <span className="ml-1 font-bold text-orange-600">₹{item.deposit}</span>
+                      </div>
+                                )}
+                    </div>
+                            </div>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    <div className="flex gap-4 text-sm">
-                      <div>
-                        <strong>Total Deposit:</strong> ₹{rental.total_deposit || 0}
+                    {/* Financial Summary */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl p-4 border-2 border-violet-200">
+                        <div className="text-xs text-gray-600 font-medium mb-1">Total Deposit</div>
+                        <div className="text-2xl font-extrabold text-violet-700">₹{rental.total_deposit || 0}</div>
                       </div>
-                      <div>
-                        <strong>Total Monthly:</strong> ₹{rental.total_monthly_amount || 0}
+                      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border-2 border-blue-200">
+                        <div className="text-xs text-gray-600 font-medium mb-1">Monthly Rent</div>
+                        <div className="text-2xl font-extrabold text-blue-700">₹{rental.total_monthly_amount || 0}</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200">
+                        <div className="text-xs text-gray-600 font-medium mb-1">Total Amount</div>
+                        <div className="text-2xl font-extrabold text-green-700">
+                          ₹{(rental.total_monthly_amount || 0) + (rental.total_deposit || 0)}
+                        </div>
                       </div>
                     </div>
 
-                    {/* Payment Records */}
+                    {/* Payment Records - Modern Design */}
                     {rental.payment_records && rental.payment_records.length > 0 && (
-                      <div className="mt-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <h4 className="text-sm font-medium text-gray-700">Payment Records:</h4>
+                      <div className="mb-6">
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <div className="w-1 h-6 bg-gradient-to-b from-green-500 to-emerald-600 rounded-full"></div>
+                            Payment Records ({rental.payment_records.length})
+                          </h4>
                           {(() => {
                             const pendingPayments = rental.payment_records.filter(
                               p => p.status === 'Pending' || p.status === 'Overdue'
@@ -667,23 +874,25 @@ function RentalManagement() {
                             return pendingPayments.length > 0 ? (
                               <button
                                 onClick={() => handleSendReminders(rentalId)}
-                                className="bg-orange-100 text-orange-700 px-3 py-1 rounded-lg text-xs hover:bg-orange-200 font-medium"
+                                className="group flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-300"
                                 title="Send payment reminders to customer"
                               >
+                                <EnvelopeIcon className="w-4 h-4" />
                                 Send Reminders ({pendingPayments.length})
                               </button>
                             ) : null;
                           })()}
                         </div>
+                        <div className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden shadow-lg">
                         <div className="overflow-x-auto">
-                          <table className="min-w-full text-sm">
-                            <thead className="bg-gray-50">
+                            <table className="min-w-full">
+                              <thead className="bg-gradient-to-r from-gray-50 to-violet-50/50">
                               <tr>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Month</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Amount</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Due Date</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Status</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Actions</th>
+                                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Month</th>
+                                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Amount</th>
+                                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Due Date</th>
+                                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
@@ -694,43 +903,49 @@ function RentalManagement() {
                                 return (
                                   <tr 
                                     key={payment._id} 
-                                    className={`hover:bg-gray-50 ${isOverdue ? 'bg-red-50' : ''}`}
+                                      className={`hover:bg-violet-50/30 transition-colors ${isOverdue ? 'bg-red-50/50 border-l-4 border-red-500' : ''}`}
                                   >
-                                    <td className="px-3 py-2">
+                                      <td className="px-4 py-3">
+                                        <div className="font-semibold text-gray-900">
                                       {new Date(parseInt(year), parseInt(month) - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}
+                                        </div>
                                     </td>
-                                    <td className="px-3 py-2">₹{payment.amount}</td>
-                                    <td className="px-3 py-2">
+                                      <td className="px-4 py-3">
+                                        <div className="font-bold text-violet-600">₹{payment.amount}</div>
+                                      </td>
+                                      <td className="px-4 py-3">
+                                        <div className="text-sm text-gray-700">
                                       {payment.dueDate ? new Date(payment.dueDate).toLocaleDateString() : '-'}
+                                        </div>
                                     </td>
-                                    <td className="px-3 py-2">
-                                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                        payment.status === 'Paid' ? 'bg-green-100 text-green-800' :
-                                        payment.status === 'Overdue' ? 'bg-red-100 text-red-800' :
-                                        payment.status === 'Partial' ? 'bg-orange-100 text-orange-800' :
-                                        'bg-yellow-100 text-yellow-800'
+                                      <td className="px-4 py-3">
+                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
+                                          payment.status === 'Paid' ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-300' :
+                                          payment.status === 'Overdue' ? 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-300' :
+                                          payment.status === 'Partial' ? 'bg-gradient-to-r from-orange-100 to-amber-100 text-orange-800 border border-orange-300' :
+                                          'bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border border-yellow-300'
                                       }`}>
                                         {payment.status}
                                       </span>
                                     </td>
-                                    <td className="px-3 py-2">
+                                      <td className="px-4 py-3">
                                       <div className="flex items-center gap-2 flex-wrap">
                                         {/* Send Reminder Button - Only for non-paid payments */}
                                         {payment.status !== 'Paid' && (
                                           <button
                                             onClick={() => handleSendReminderForMonth(rentalId, payment._id)}
                                             disabled={paymentLoading[`reminder-${payment._id}`]}
-                                            className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                                              className="group flex items-center gap-1.5 bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-md hover:shadow-lg hover:scale-105 transform transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                                             title="Send reminder email"
                                           >
                                             {paymentLoading[`reminder-${payment._id}`] ? (
                                               <>
-                                                <span className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-blue-700"></span>
+                                                  <span className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></span>
                                                 Sending...
                                               </>
                                             ) : (
                                               <>
-                                                <EnvelopeIcon className="w-3 h-3" />
+                                                  <EnvelopeIcon className="w-3.5 h-3.5" />
                                                 Remind
                                               </>
                                             )}
@@ -745,9 +960,10 @@ function RentalManagement() {
                                               setSelectedPayment(payment);
                                               setShowPaymentUpdateModal(true);
                                             }}
-                                            className="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 rounded hover:bg-blue-50"
+                                              className="flex items-center gap-1.5 bg-gradient-to-r from-violet-500 to-purple-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-md hover:shadow-lg hover:scale-105 transform transition-all duration-300"
                                             title="Update payment"
                                           >
+                                              <PencilIcon className="w-3.5 h-3.5" />
                                             Update
                                           </button>
                                         )}
@@ -756,17 +972,17 @@ function RentalManagement() {
                                         <button
                                           onClick={() => handleDeletePayment(rentalId, payment._id)}
                                           disabled={paymentLoading[payment._id]}
-                                          className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-medium hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                                            className="group flex items-center gap-1.5 bg-gradient-to-r from-red-500 to-rose-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-md hover:shadow-lg hover:scale-105 transform transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                                           title="Delete payment record"
                                         >
                                           {paymentLoading[payment._id] ? (
                                             <>
-                                              <span className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-red-700"></span>
+                                                <span className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></span>
                                               Deleting...
                                             </>
                                           ) : (
                                             <>
-                                              <TrashIcon className="w-3 h-3" />
+                                                <TrashIcon className="w-3.5 h-3.5" />
                                               Delete
                                             </>
                                           )}
@@ -774,7 +990,7 @@ function RentalManagement() {
                                         
                                         {/* Paid Date Display - For paid payments */}
                                         {payment.status === 'Paid' && payment.paidDate && (
-                                          <span className="text-xs text-gray-500">
+                                            <span className="text-xs text-gray-600 font-medium bg-green-50 px-2 py-1 rounded-lg border border-green-200">
                                             Paid: {new Date(payment.paidDate).toLocaleDateString()}
                                           </span>
                                         )}
@@ -787,44 +1003,48 @@ function RentalManagement() {
                           </table>
                         </div>
                       </div>
-                    )}
                   </div>
+                    )}
 
-                  <div className="flex flex-col items-end gap-2 ml-4">
-                    <div className="flex flex-col gap-2">
+                    {/* Action Buttons - Modern Design */}
+                    <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
                       <button
                         onClick={() => {
                           setSelectedRental(rental);
                           setShowPaymentModal(true);
                         }}
-                        className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-sm hover:bg-blue-200"
+                        className="group flex items-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-300"
                         title="Record Payment"
                       >
                         <CurrencyDollarIcon className="w-5 h-5" />
+                        Record Payment
                       </button>
                       <button
                         onClick={() => {
                           setSelectedRental(rental);
                           setShowGeneratePaymentsModal(true);
                         }}
-                        className="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-sm hover:bg-green-200"
+                        className="group flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-300"
                         title="Generate Payment Records"
                       >
-                        Generate
+                        <PlusIcon className="w-5 h-5" />
+                        Generate Payments
                       </button>
                       <button
                         onClick={() => handleEdit(rental)}
-                        className="bg-violet-100 text-violet-700 px-3 py-1 rounded-lg text-sm hover:bg-violet-200"
-                        title="Edit"
+                        className="group flex items-center gap-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-300"
+                        title="Edit Rental"
                       >
                         <PencilIcon className="w-5 h-5" />
+                        Edit
                       </button>
                       <button
                         onClick={() => handleDelete(rentalId)}
-                        className="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-sm hover:bg-red-200"
-                        title="Delete"
+                        className="group flex items-center gap-2 bg-gradient-to-r from-red-500 to-rose-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-300"
+                        title="Delete Rental"
                       >
                         <TrashIcon className="w-5 h-5" />
+                        Delete
                       </button>
                     </div>
                   </div>
@@ -833,30 +1053,37 @@ function RentalManagement() {
             );
           })
         )}
+        </div>
 
-        {/* Pagination */}
+        {/* Modern Pagination with Glassmorphism */}
         {totalPages > 1 && (
-          <div className="mt-8 flex items-center justify-between bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200">
+          <div className="mt-8 bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl px-6 py-4 border border-white/50 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-50/30 via-transparent to-purple-50/30 pointer-events-none"></div>
+            <div className="relative z-10">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700">
-                Showing <span className="font-medium">{(currentPage - 1) * rentalsPerPage + 1}</span> to{' '}
-                <span className="font-medium">
+                <span className="text-sm text-gray-600">
+                  Showing <span className="font-bold text-violet-600">{(currentPage - 1) * rentalsPerPage + 1}</span> to{' '}
+                  <span className="font-bold text-violet-600">
                   {Math.min(currentPage * rentalsPerPage, totalRentals)}
                 </span>{' '}
-                of <span className="font-medium">{totalRentals}</span> rentals
+                  of <span className="font-bold text-violet-600">{totalRentals}</span> rentals
               </span>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:border-violet-500 hover:bg-violet-50 hover:text-violet-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:bg-white disabled:hover:text-gray-700 transform transition-all duration-300"
               >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
                 Previous
               </button>
               
               {/* Page Numbers */}
-              <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                   let pageNum;
                   if (totalPages <= 5) {
@@ -873,10 +1100,10 @@ function RentalManagement() {
                     <button
                       key={pageNum}
                       onClick={() => handlePageChange(pageNum)}
-                      className={`px-3 py-2 text-sm font-medium rounded-lg ${
+                        className={`px-4 py-2 text-sm font-bold rounded-xl transform transition-all duration-300 ${
                         currentPage === pageNum
-                          ? 'bg-violet-600 text-white'
-                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                            ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-500/50 scale-110'
+                            : 'text-gray-700 bg-white border-2 border-gray-300 hover:border-violet-500 hover:bg-violet-50 hover:text-violet-700 hover:scale-105'
                       }`}
                     >
                       {pageNum}
@@ -888,39 +1115,59 @@ function RentalManagement() {
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:border-violet-500 hover:bg-violet-50 hover:text-violet-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:bg-white disabled:hover:text-gray-700 transform transition-all duration-300"
               >
                 Next
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
               </button>
+              </div>
+            </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Add/Edit Modal */}
+      {/* Modern Add/Edit Modal with Glassmorphism */}
       {showModal && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-semibold text-gray-900">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border-2 border-gray-200 animate-slide-up">
+            {/* Modal Header with Gradient */}
+            <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 p-6 text-white">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-3xl font-extrabold mb-1 drop-shadow-lg">
                 {selectedRental ? 'Edit Rental' : 'Add New Rental'}
               </h2>
+                  <p className="text-violet-100 text-sm">
+                    {selectedRental ? 'Update rental information' : 'Create a new offline rental'}
+                  </p>
+                </div>
               <button
                 onClick={() => {
                   setShowModal(false);
                   resetForm();
                 }}
-                className="text-gray-400 hover:text-gray-600"
+                  className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:rotate-90"
               >
                 <XMarkIcon className="w-6 h-6" />
               </button>
+              </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Contact Details */}
+            {/* Modal Body */}
+            <div className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Contact Details Section */}
+                <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl p-6 border-2 border-violet-100">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-600 rounded-full"></div>
+                    Customer Information
+                  </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
                     Customer Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -929,11 +1176,12 @@ function RentalManagement() {
                     value={formData.customer_name}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                        className="input-modern w-full"
+                        placeholder="Enter customer name"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
                     Customer Email <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -942,11 +1190,12 @@ function RentalManagement() {
                     value={formData.customer_email}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                        className="input-modern w-full"
+                        placeholder="customer@example.com"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
                     Customer Phone <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -955,23 +1204,25 @@ function RentalManagement() {
                     value={formData.customer_phone}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                        className="input-modern w-full"
+                        placeholder="+91 1234567890"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
                     Status
                   </label>
                   <select
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                        className="input-modern w-full"
                   >
                     {STATUS_TYPES.map(status => (
                       <option key={status} value={status}>{status}</option>
                     ))}
                   </select>
+                    </div>
                 </div>
               </div>
 
@@ -1182,12 +1433,13 @@ function RentalManagement() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
+                  className="group flex items-center gap-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-300"
                 >
                   {selectedRental ? 'Update' : 'Create'} Rental
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}

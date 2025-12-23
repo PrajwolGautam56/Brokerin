@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import logger from '../utils/logger';
 import { useState, useEffect } from 'react';
+import { formatPrice as formatPriceUtil, formatPriceWithSuffix } from '../utils/priceFormatter';
 import { MapPinIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import PropertyMap from '../components/property/PropertyMap';
@@ -83,9 +84,11 @@ function PropertyDetails() {
     if (!price) return 'Price not available';
     
     if (property.listing_type === 'Rent') {
-      return price.rent_monthly ? `₹${price.rent_monthly.toLocaleString()}/month` : 'Rent not specified';
+      if (!price.rent_monthly) return 'Rent not specified';
+      return formatPriceWithSuffix(price.rent_monthly, '/month');
     }
-    return price.sell_price ? `₹${price.sell_price.toLocaleString()}` : 'Price not specified';
+    if (!price.sell_price) return 'Price not specified';
+    return formatPriceUtil(price.sell_price);
   };
 
   const getFullAddress = () => {

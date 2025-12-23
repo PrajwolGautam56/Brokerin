@@ -241,23 +241,77 @@
   /* Shimmer Effect */
   @keyframes shimmer {
     0% {
-      background-position: -1000px 0;
+      transform: translateX(-100%);
     }
     100% {
-      background-position: 1000px 0;
+      transform: translateX(100%);
     }
   }
   
   .shimmer {
     background: linear-gradient(
       90deg,
-      #f0f0f0 0%,
-      #e0e0e0 20%,
-      #f0f0f0 40%,
-      #f0f0f0 100%
+      transparent 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 100%
     );
-    background-size: 1000px 100%;
-    animation: shimmer 2s infinite;
+    animation: shimmer 3s infinite;
+  }
+
+  /* Move Animation for Background Patterns */
+  @keyframes move {
+    0% {
+      transform: translate(0, 0);
+    }
+    100% {
+      transform: translate(50px, 50px);
+    }
+  }
+
+  /* Slide Down Animation */
+  @keyframes slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-down {
+    animation: slide-down 0.3s ease-out;
+  }
+
+  /* Slide Up Animation */
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.4s ease-out;
+  }
+
+  /* Fade In Animation */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out;
   }
   
   /* Professional Divider */
