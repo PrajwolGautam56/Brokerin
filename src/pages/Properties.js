@@ -275,15 +275,15 @@ function Properties() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-violet-50/20 to-purple-50/20">
       {/* Header Section - White */}
-      <div className="bg-white pt-2 pb-6">
+      <div className="bg-white pt-4 pb-6 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
               Available Properties
             </h1>
-            <p className="mt-4 text-lg text-gray-600">
+            <p className="mt-2 sm:mt-4 text-sm sm:text-lg text-gray-600">
               {sortedProperties.length} {sortedProperties.length === 1 ? 'property' : 'properties'} found
               {filters.type !== 'all' && ` (${filters.type === 'rent' ? 'For Rent' : 'For Sale'})`}
             </p>
@@ -292,15 +292,15 @@ function Properties() {
       </div>
 
       {/* Filters Section - Light Gray */}
-      <div className="bg-gray-50 py-0">
+      <div className="bg-gray-50 py-0 sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Filter Section */}
           <div className="relative">
             {/* Filters Header */}
             <div className="bg-white shadow-sm mb-4">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+              <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-3">
                 {/* Type Filter Tabs */}
-                <div className="flex justify-center mb-4 gap-8">
+                <div className="flex justify-center mb-3 sm:mb-4 gap-2 sm:gap-4 md:gap-8 overflow-x-auto pb-2">
                   <button
                     onClick={() => {
                       logger.log('🔄 Setting filter to: all');
@@ -310,7 +310,7 @@ function Properties() {
                         return updated;
                       });
                     }}
-                    className={`pb-3 px-8 font-semibold transition-all duration-300 ${
+                    className={`pb-2 sm:pb-3 px-3 sm:px-6 md:px-8 font-semibold text-sm sm:text-base whitespace-nowrap transition-all duration-300 ${
                       filters.type === 'all' 
                         ? 'text-violet-600 border-b-2 border-violet-600' 
                         : 'text-gray-400 hover:text-gray-600'
@@ -327,7 +327,7 @@ function Properties() {
                         return updated;
                       });
                     }}
-                    className={`pb-3 px-8 font-semibold transition-all duration-300 ${
+                    className={`pb-2 sm:pb-3 px-3 sm:px-6 md:px-8 font-semibold text-sm sm:text-base whitespace-nowrap transition-all duration-300 ${
                       filters.type === 'rent' 
                         ? 'text-violet-600 border-b-2 border-violet-600' 
                         : 'text-gray-400 hover:text-gray-600'
@@ -344,7 +344,7 @@ function Properties() {
                         return updated;
                       });
                     }}
-                    className={`pb-3 px-8 font-semibold transition-all duration-300 ${
+                    className={`pb-2 sm:pb-3 px-3 sm:px-6 md:px-8 font-semibold text-sm sm:text-base whitespace-nowrap transition-all duration-300 ${
                       filters.type === 'buy' 
                         ? 'text-violet-600 border-b-2 border-violet-600' 
                         : 'text-gray-400 hover:text-gray-600'
@@ -354,43 +354,45 @@ function Properties() {
                   </button>
                 </div>
 
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+                  <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
                     <button
                       onClick={() => setShowFilters(!showFilters)}
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
+                      className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-violet-100 to-purple-100 rounded-lg hover:from-violet-200 hover:to-purple-200 transition-all text-sm sm:text-base font-medium text-violet-700"
                     >
-                      <AdjustmentsHorizontalIcon className="h-5 w-5" />
-                      Filters
+                      <AdjustmentsHorizontalIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <span className="hidden sm:inline">Filters</span>
                     </button>
-                    <span className="text-gray-600">
-                      {filteredProperties.length} {filteredProperties.length === 1 ? 'property' : 'properties'} found
+                    <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+                      {filteredProperties.length} {filteredProperties.length === 1 ? 'property' : 'properties'}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
                     <select
                       value={filters.sortBy}
                       onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
-                      className="px-4 py-2 border rounded-lg focus:ring-violet-500 focus:border-violet-500"
+                      className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white"
                     >
                       <option value="newest">Newest First</option>
                       <option value="price-low">Price: Low to High</option>
                       <option value="price-high">Price: High to Low</option>
                     </select>
 
-                    <div className="flex gap-2 border rounded-lg p-1">
+                    <div className="flex gap-1 sm:gap-2 border rounded-lg p-1 bg-white">
                       <button
                         onClick={() => setViewMode('grid')}
-                        className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-violet-100 text-violet-600' : 'text-gray-600'}`}
+                        className={`p-1.5 sm:p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-violet-100 text-violet-600 shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}
+                        aria-label="Grid view"
                       >
-                        <ViewColumnsIcon className="h-5 w-5" />
+                        <ViewColumnsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                       </button>
                       <button
                         onClick={() => setViewMode('map')}
-                        className={`p-2 rounded-md ${viewMode === 'map' ? 'bg-violet-100 text-violet-600' : 'text-gray-600'}`}
+                        className={`p-1.5 sm:p-2 rounded-md transition-all ${viewMode === 'map' ? 'bg-violet-100 text-violet-600 shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}
+                        aria-label="Map view"
                       >
-                        <MapIcon className="h-5 w-5" />
+                        <MapIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                       </button>
                     </div>
                   </div>
@@ -398,8 +400,8 @@ function Properties() {
 
                 {/* Expanded Filters */}
                 {showFilters && (
-                  <div className="mt-4 p-4 border-t">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="mt-4 p-3 sm:p-4 border-t border-gray-200">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
                         <input
@@ -513,26 +515,33 @@ function Properties() {
       </div>
 
       {/* Properties Grid - White */}
-      <div className="bg-white py-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bg-transparent py-4 sm:py-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           {/* Properties Grid */}
-          <div className="mt-4">
+          <div className="mt-2 sm:mt-4">
             {viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {sortedProperties.map(property => (
                   <PropertyCard key={property._id} property={property} />
                 ))}
               </div>
             ) : (
-              <div className="h-[calc(100vh-200px)]">
+              <div className="h-[calc(100vh-180px)] sm:h-[calc(100vh-220px)] md:h-[calc(100vh-200px)] w-full rounded-xl overflow-hidden shadow-lg border border-gray-200">
                 <PropertiesMap properties={sortedProperties} />
               </div>
             )}
 
             {sortedProperties.length === 0 && (
-              <div className="text-center py-12">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No properties found</h3>
-                <p className="text-gray-600">Try adjusting your filters to see more results</p>
+              <div className="text-center py-12 sm:py-16">
+                <div className="max-w-md mx-auto">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No properties found</h3>
+                  <p className="text-sm sm:text-base text-gray-600">Try adjusting your filters to see more results</p>
+                </div>
               </div>
             )}
           </div>

@@ -23,10 +23,10 @@ function PropertyCard({ property }) {
   return (
     <Link 
       to={`/property/${property._id}`}
-      className="block card-modern group"
+      className="block card-modern group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
     >
       {/* Property Image */}
-      <div className="relative h-56 bg-gradient-to-br from-gray-200 to-gray-300 overflow-hidden">
+      <div className="relative h-48 sm:h-56 bg-gradient-to-br from-gray-200 to-gray-300 overflow-hidden">
         {imageUrl ? (
           <img 
             src={imageUrl}
@@ -37,12 +37,12 @@ function PropertyCard({ property }) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gradient-to-br from-gray-100 to-gray-200">
-            <span className="text-sm">No image available</span>
+            <span className="text-xs sm:text-sm">No image available</span>
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        <div className="absolute top-4 right-4 z-10">
-          <span className={`px-4 py-1.5 rounded-full text-xs font-bold shadow-lg ${
+        <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10">
+          <span className={`px-2 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs font-bold shadow-lg ${
             property.status === 'Available' 
               ? 'bg-green-500 text-white'
               : 'bg-red-500 text-white'
@@ -53,39 +53,39 @@ function PropertyCard({ property }) {
       </div>
 
       {/* Property Details */}
-      <div className="p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex-1">
-            <h3 className="text-xl font-bold text-gray-900 group-hover:text-violet-600 transition-colors mb-2">
+      <div className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 sm:mb-4 gap-2">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-violet-600 transition-colors mb-1 sm:mb-2 line-clamp-2">
               {propertyName}
             </h3>
-            <p className="text-gray-500 flex items-center gap-1 text-sm">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <p className="text-gray-500 flex items-center gap-1 text-xs sm:text-sm truncate">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              {property.location || 'Location Not Available'}
+              <span className="truncate">{property.location || 'Location Not Available'}</span>
             </p>
           </div>
-          <div className="ml-4">
-            <span className="bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700 px-3 py-1 rounded-lg text-xs font-bold">
+          <div className="sm:ml-4 flex-shrink-0">
+            <span className="bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700 px-2 sm:px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap">
               {property.listing_type || 'Type Not Available'}
             </span>
           </div>
         </div>
 
         {/* Property Specs */}
-        <div className="grid grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-xl">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-3 sm:mb-4 p-3 sm:p-4 bg-gray-50 rounded-xl">
           <div className="text-center">
-            <div className="text-2xl font-bold gradient-text">{property.bhk || 'N/A'}</div>
+            <div className="text-xl sm:text-2xl font-bold gradient-text">{property.bhk || 'N/A'}</div>
             <div className="text-xs text-gray-600 mt-1">BHK</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold gradient-text">{property.bathrooms || 'N/A'}</div>
+            <div className="text-xl sm:text-2xl font-bold gradient-text">{property.bathrooms || 'N/A'}</div>
             <div className="text-xs text-gray-600 mt-1">Baths</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold gradient-text">{property.size || 'N/A'}</div>
+            <div className="text-xl sm:text-2xl font-bold gradient-text">{property.size || 'N/A'}</div>
             <div className="text-xs text-gray-600 mt-1">sq.ft</div>
           </div>
         </div>
@@ -115,23 +115,23 @@ function PropertyCard({ property }) {
         </div>
 
         {/* Additional Info */}
-        <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center text-sm">
+        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 text-xs sm:text-sm">
           <div className="text-gray-600 flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
             <span className="font-medium">{property.furnishing || 'Not Specified'} Furnished</span>
           </div>
-          <div className="text-violet-600 font-bold bg-violet-50 px-3 py-1 rounded-lg">
+          <div className="text-violet-600 font-bold bg-violet-50 px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm whitespace-nowrap">
             {property.availability || 'Availability Not Specified'}
           </div>
         </div>
         
         {/* Price Badge */}
-        <div className="mt-4 pt-4 border-t border-gray-100">
+        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100">
           <div className="text-center">
             <span className="text-xs text-gray-500 block mb-1">Starting from</span>
-            <span className="text-2xl font-extrabold gradient-text">
+            <span className="text-xl sm:text-2xl font-extrabold gradient-text">
               {property.listing_type === 'Rent'
                 ? formatPriceWithSuffix(property.price?.rent_monthly, '/month')
                 : formatPrice(property.price?.sell_price)}

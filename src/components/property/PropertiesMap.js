@@ -22,8 +22,11 @@ function PropertiesMap({ properties }) {
     <MapContainer 
       center={center} 
       zoom={12} 
-      style={{ height: '100%', width: '100%' }}
-      className="rounded-lg shadow-lg"
+      style={{ height: '100%', width: '100%', minHeight: '400px' }}
+      className="rounded-lg shadow-lg z-0"
+      scrollWheelZoom={true}
+      touchZoom={true}
+      dragging={true}
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
