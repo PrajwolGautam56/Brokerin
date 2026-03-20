@@ -630,7 +630,8 @@ function AdminProperties() {
       const response = await api.post('/api/properties', formData);
 
       if (response.data) {
-        setProperties(prev => [...prev, response.data]);
+        const createdProperty = response.data.property_details || response.data;
+        setProperties(prev => [...prev, createdProperty]);
         setIsAddModalOpen(false);
         resetForm('add');
       }
@@ -907,7 +908,7 @@ function AdminProperties() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-violet-500"
                     >
                       <option value="Available">Available</option>
-                      <option value="Not Available">Not Available</option>
+                      <option value="Sold">Sold</option>
                     </select>
                 </div>
                 <div>
@@ -1232,7 +1233,7 @@ function AdminProperties() {
                       </label>
                       <p className="pl-1">or drag and drop</p>
                     </div>
-                    <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                    <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
                   </div>
                 </div>
                 {previewUrls.length > 0 && (
@@ -1376,7 +1377,7 @@ function AdminProperties() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-violet-500"
                     >
                       <option value="Available">Available</option>
-                      <option value="Not Available">Not Available</option>
+                      <option value="Sold">Sold</option>
                     </select>
                   </div>
                   <div>
@@ -1733,7 +1734,7 @@ function AdminProperties() {
                         </label>
                         <p className="pl-1">or drag and drop</p>
                       </div>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
                     </div>
                   </div>
                   {editPreviewUrls.length > 0 && (

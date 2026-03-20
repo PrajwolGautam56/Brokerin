@@ -3,23 +3,52 @@ import { rentalService } from '../../../services/rentalService';
 import { XMarkIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 
 function DuesBreakdownView({ totalAmount, byCustomer, allDues, onClose }) {
-  const [filteredDues, setFilteredDues] = useState(allDues || []);
   const [filter, setFilter] = useState('all');
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [expandedCustomers, setExpandedCustomers] = useState(new Set());
+  const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState('');
+  const [duesData, setDuesData] = useState({
+    totalAmount: totalAmount || 0,
+    byCustomer: byCustomer || [],
+    allDues: allDues || [],
+    pendingDues: (allDues || []).filter(d => d.status === 'Pending'),
+    overdueDues: (allDues || []).filter(d => d.status === 'Overdue')
+  });
+  const [filteredDues, setFilteredDues] = useState(allDues || []);
 
   useEffect(() => {
-    let filtered = allDues || [];
+    let filtered = duesData.allDues || [];
     if (filter === 'pending') {
       filtered = filtered.filter(d => d.status === 'Pending');
     } else if (filter === 'overdue') {
       filtered = filtered.filter(d => d.status === 'Overdue');
     }
-    if (selectedCustomer) {
-      filtered = filtered.filter(d => d.customer_email === selectedCustomer);
-    }
     setFilteredDues(filtered);
-  }, [filter, selectedCustomer, allDues]);
+  }, [filter, duesData]);
+
+  useEffect(() => {
+    const fetchDuesBreakdown = async () => {
+      try {
+        setLoading(true);
+        setFetchError('');
+        const response = await rentalService.getDuesBreakdown({ status: filter });
+        const data = response?.data || {};
+        setDuesData({
+          totalAmount: data.total_amount || 0,
+          byCustomer: data.by_customer || [],
+          allDues: data.dues || [],
+          pendingDues: data.pending_dues || [],
+          overdueDues: data.overdue_dues || []
+        });
+      } catch (error) {
+        setFetchError(error?.message || 'Failed to load dues breakdown');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDuesBreakdown();
+  }, [filter]);
 
   const toggleCustomer = (email) => {
     const newExpanded = new Set(expandedCustomers);
@@ -31,8 +60,8 @@ function DuesBreakdownView({ totalAmount, byCustomer, allDues, onClose }) {
     setExpandedCustomers(newExpanded);
   };
 
-  const pendingCount = (allDues || []).filter(d => d.status === 'Pending').length;
-  const overdueCount = (allDues || []).filter(d => d.status === 'Overdue').length;
+  const pendingCount = duesData.pendingDues.length;
+  const overdueCount = duesData.overdueDues.length;
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -58,7 +87,7 @@ function DuesBreakdownView({ totalAmount, byCustomer, allDues, onClose }) {
             }`}
             onClick={() => setFilter('all')}
           >
-            All ({(allDues || []).length})
+            All ({(duesData.allDues || []).length})
           </button>
           <button
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -83,17 +112,27 @@ function DuesBreakdownView({ totalAmount, byCustomer, allDues, onClose }) {
         </div>
         <div className="bg-violet-50 border border-violet-200 rounded-lg p-4">
           <p className="text-sm text-violet-800">
-            <strong>Total Dues:</strong> ₹{totalAmount?.toLocaleString() || 0}
+            <strong>Total Dues:</strong> ₹{duesData.totalAmount?.toLocaleString() || 0}
           </p>
         </div>
       </div>
+      {loading && (
+        <div className="mb-4 text-sm text-violet-700 bg-violet-50 border border-violet-200 rounded p-3">
+          Loading dues data...
+        </div>
+      )}
+      {fetchError && (
+        <div className="mb-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3">
+          {fetchError}
+        </div>
+      )}
 
       {/* Grouped by Customer */}
-      {byCustomer && byCustomer.length > 0 && (
+      {duesData.byCustomer && duesData.byCustomer.length > 0 && (
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Grouped by Customer</h3>
           <div className="space-y-3">
-            {byCustomer.map((customer, idx) => {
+            {duesData.byCustomer.map((customer, idx) => {
               const isExpanded = expandedCustomers.has(customer.customer_email);
               return (
                 <div

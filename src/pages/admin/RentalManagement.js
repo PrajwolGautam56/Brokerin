@@ -71,7 +71,8 @@ function RentalManagement() {
       setError(null);
       const filters = {
         page: page,
-        limit: rentalsPerPage
+        limit: rentalsPerPage,
+        exclude_order_source: 'cart'
       };
       if (activeStatus !== 'All') filters.status = activeStatus;
       if (searchTerm) filters.search = searchTerm;
@@ -114,11 +115,10 @@ function RentalManagement() {
       const statusTypes = ['Active', 'Completed', 'Cancelled', 'On Hold'];
       
       // Fetch all rentals without pagination to get accurate counts
-      const allFilters = { limit: 1000 }; // Large limit to get all
+      const allFilters = { limit: 1000, exclude_order_source: 'cart' }; // Large limit to get all offline rentals
       const allResponse = await rentalService.getAllRentals(allFilters);
       const allRentalsRaw = allResponse.data || allResponse.rentals || allResponse || [];
-      // Exclude cart orders so Rental Management remains offline-focused
-      const allRentals = allRentalsRaw.filter(r => r.order_source !== 'cart');
+      const allRentals = allRentalsRaw;
       
       counts.All = allRentals.length;
       statusTypes.forEach(status => {

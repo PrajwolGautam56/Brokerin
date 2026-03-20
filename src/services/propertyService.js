@@ -289,8 +289,8 @@ export const propertyService = {
   checkPropertyExists: async (id) => {
     try {
       logger.log(`Checking if property with ID ${id} exists`);
-      const response = await api.head(`/api/properties/${id}`);
-      return response.status === 200;
+      await api.get(`/api/properties/${id}`);
+      return true;
     } catch (error) {
       logger.error(`Property with ID ${id} does not exist:`, error);
       return false;
