@@ -7,7 +7,6 @@ function MonthlyCollectionView({ collection }) {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [monthDetails, setMonthDetails] = useState(null);
   const [duesDetails, setDuesDetails] = useState(null);
-  const [detailsTab, setDetailsTab] = useState('collected');
   const [loading, setLoading] = useState(false);
 
   const fetchMonthDetails = async (month) => {
@@ -15,7 +14,6 @@ function MonthlyCollectionView({ collection }) {
       setSelectedMonth(null);
       setMonthDetails(null);
       setDuesDetails(null);
-      setDetailsTab('collected');
       return;
     }
 
@@ -32,7 +30,6 @@ function MonthlyCollectionView({ collection }) {
       setMonthDetails(paidData);
       setDuesDetails(duesData);
       setSelectedMonth(month);
-      setDetailsTab('collected');
     } catch (err) {
       logger.error('Error fetching month details:', err);
       alert('Failed to fetch month details: ' + (err.message || 'Unknown error'));
@@ -52,7 +49,7 @@ function MonthlyCollectionView({ collection }) {
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Monthly Collection Records</h2>
+      <h2 className="text-xl font-semibold text-gray-900 mb-4">Monthly Payment Tracking</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {collection.map((month, idx) => (
@@ -67,7 +64,7 @@ function MonthlyCollectionView({ collection }) {
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center bg-violet-50 p-2 rounded">
-                <span className="text-sm text-gray-600">Total Collected:</span>
+                <span className="text-sm text-gray-600">Collected:</span>
                 <span className="text-sm font-bold text-violet-600">
                   ₹{month.total_collected?.toLocaleString() || 0}
                 </span>
@@ -102,31 +99,10 @@ function MonthlyCollectionView({ collection }) {
                 </h3>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setDetailsTab('collected')}
-                    className={`px-3 py-1.5 rounded-md text-xs font-semibold ${
-                      detailsTab === 'collected'
-                        ? 'bg-violet-600 text-white'
-                        : 'bg-gray-100 text-gray-700'
-                    }`}
-                  >
-                    Collected
-                  </button>
-                  <button
-                    onClick={() => setDetailsTab('dues')}
-                    className={`px-3 py-1.5 rounded-md text-xs font-semibold ${
-                      detailsTab === 'dues'
-                        ? 'bg-orange-600 text-white'
-                        : 'bg-gray-100 text-gray-700'
-                    }`}
-                  >
-                    Pending / Overdue
-                  </button>
-                  <button
                     onClick={() => {
                       setSelectedMonth(null);
                       setMonthDetails(null);
                       setDuesDetails(null);
-                      setDetailsTab('collected');
                     }}
                     className="text-gray-400 hover:text-gray-600"
                   >
@@ -135,111 +111,7 @@ function MonthlyCollectionView({ collection }) {
                 </div>
               </div>
 
-              {detailsTab === 'collected' && (
-                <>
-                  {/* Summary Stats for collected */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-violet-50 border border-violet-200 rounded-lg p-4">
-                      <div className="text-sm text-gray-600 mb-1">Total Collected</div>
-                      <div className="text-xl font-bold text-violet-600">
-                        ₹{monthDetails.total_collected?.toLocaleString() || 0}
-                      </div>
-                    </div>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="text-sm text-gray-600 mb-1">Payments</div>
-                      <div className="text-xl font-bold text-blue-600">
-                        {monthDetails.payments_count || 0}
-                      </div>
-                    </div>
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <div className="text-sm text-gray-600 mb-1">Customers</div>
-                      <div className="text-xl font-bold text-green-600">
-                        {monthDetails.customers_count || monthDetails.payments_count || 0}
-                      </div>
-                    </div>
-                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                      <div className="text-sm text-gray-600 mb-1">Average Payment</div>
-                      <div className="text-xl font-bold text-orange-600">
-                        ₹{monthDetails.average_payment?.toLocaleString() || 0}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Payments Table */}
-                  {monthDetails.payments && monthDetails.payments.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rental ID</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment Date</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {monthDetails.payments.map((payment, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div>
-                                  <div className="text-sm font-medium text-gray-900">{payment.customer_name}</div>
-                                  <div className="text-xs text-gray-500">{payment.customer_email}</div>
-                                  {payment.customer_phone && (
-                                    <div className="text-xs text-gray-500">{payment.customer_phone}</div>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">{payment.rental_id}</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">
-                                  ₹{payment.amount?.toLocaleString() || 0}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-600">
-                                  {payment.paidDate ? new Date(payment.paidDate).toLocaleDateString('en-IN', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                    year: 'numeric'
-                                  }) : '-'}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                  {payment.paymentMethod || 'N/A'}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="text-sm text-gray-600">
-                                  {payment.items && payment.items.length > 0 ? (
-                                    <ul className="list-disc list-inside">
-                                      {payment.items.map((item, i) => (
-                                        <li key={i}>{item.product_name} {item.monthly_price && `(₹${item.monthly_price.toLocaleString()}/month)`}</li>
-                                      ))}
-                                    </ul>
-                                  ) : (
-                                    <span className="text-gray-400">-</span>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-                      <p className="text-gray-500">No payment records found for this month</p>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {detailsTab === 'dues' && duesDetails && (
+              {duesDetails && (
                 <div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -263,67 +135,44 @@ function MonthlyCollectionView({ collection }) {
                   </div>
 
                   {duesDetails.all_dues && duesDetails.all_dues.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Customer
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Month
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Amount
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Due Date
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Status
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {duesDetails.all_dues.map((due, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div>
-                                  <div className="text-sm font-medium text-gray-900">{due.customer_name}</div>
-                                  <div className="text-xs text-gray-500">{due.customer_email}</div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">{due.month_name || due.month}</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">
-                                  ₹{Number(due.amount || 0).toLocaleString()}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-600">
-                                  {due.dueDate
-                                    ? new Date(due.dueDate).toLocaleDateString('en-IN')
-                                    : '-'}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span
-                                  className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                    due.status === 'Overdue'
-                                      ? 'bg-red-100 text-red-800'
-                                      : 'bg-yellow-100 text-yellow-800'
-                                  }`}
-                                >
-                                  {due.status}
-                                  {due.daysOverdue ? ` (${due.daysOverdue}d)` : ''}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="space-y-3">
+                      {Object.values(
+                        duesDetails.all_dues.reduce((acc, due) => {
+                          const key = due.customer_email || 'unknown';
+                          if (!acc[key]) {
+                            acc[key] = {
+                              customer_name: due.customer_name || 'N/A',
+                              customer_email: due.customer_email || 'N/A',
+                              customer_phone: due.customer_phone || 'N/A',
+                              total: 0,
+                              pending: 0,
+                              overdue: 0
+                            };
+                          }
+                          const amount = Number(due.amount || 0);
+                          acc[key].total += amount;
+                          if (due.status === 'Pending') acc[key].pending += amount;
+                          if (due.status === 'Overdue') acc[key].overdue += amount;
+                          return acc;
+                        }, {})
+                      )
+                        .sort((a, b) => b.total - a.total)
+                        .map((customer) => (
+                          <div key={customer.customer_email} className="p-4 border rounded-lg bg-gray-50">
+                            <div className="flex justify-between gap-3">
+                              <div>
+                                <div className="font-semibold text-gray-900">{customer.customer_name}</div>
+                                <div className="text-xs text-gray-600">{customer.customer_email}</div>
+                                <div className="text-xs text-gray-600">{customer.customer_phone}</div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-lg font-bold text-gray-900">₹{customer.total.toLocaleString()}</div>
+                                <div className="text-xs text-yellow-700">Pending: ₹{customer.pending.toLocaleString()}</div>
+                                <div className="text-xs text-red-700">Overdue: ₹{customer.overdue.toLocaleString()}</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                     </div>
                   ) : (
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
@@ -333,7 +182,7 @@ function MonthlyCollectionView({ collection }) {
                 </div>
               )}
 
-              {detailsTab !== 'collected' && (!duesDetails || duesDetails.all_dues?.length === 0) && (
+              {(!duesDetails || duesDetails.all_dues?.length === 0) && (
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
                   <p className="text-gray-500">No pending or overdue dues for this month</p>
                 </div>
