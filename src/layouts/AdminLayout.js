@@ -15,7 +15,8 @@ import {
   ClipboardDocumentListIcon,
   ShoppingBagIcon,
   KeyIcon,
-  CreditCardIcon
+  CreditCardIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
 
 const navigation = [
@@ -28,6 +29,7 @@ const navigation = [
   { name: 'Rental Management', href: '/admin/rentals', icon: KeyIcon },
   { name: 'Rental Dashboard', href: '/admin/rental-dashboard', icon: ChartBarIcon },
   { name: 'Transactions', href: '/admin/transactions', icon: CreditCardIcon },
+  { name: 'Invoices', href: '/admin/invoices', icon: DocumentTextIcon },
   { name: 'Users', href: '/admin/users', icon: UserGroupIcon },
   { name: 'Services', href: '/admin/services', icon: WrenchScrewdriverIcon },
   { name: 'Enquiries', href: '/admin/enquiries', icon: ChatBubbleLeftIcon },

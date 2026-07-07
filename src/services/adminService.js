@@ -24,6 +24,61 @@ export const adminService = {
     }
   },
 
+  // Invoice Endpoints
+  getNextInvoiceNumber: async () => {
+    try {
+      const response = await api.get('/api/admin/invoices/next-number');
+      return response.data;
+    } catch (error) {
+      logger.error('Error fetching next invoice number:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        url: error.config?.url,
+        message: error.message
+      });
+      if (error.response) {
+        throw error;
+      }
+      throw error.response?.data || { message: 'Failed to fetch next invoice number' };
+    }
+  },
+
+  getInvoices: async () => {
+    try {
+      const response = await api.get('/api/admin/invoices');
+      return response.data;
+    } catch (error) {
+      logger.error('Error fetching invoices:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        url: error.config?.url,
+        message: error.message
+      });
+      if (error.response) {
+        throw error;
+      }
+      throw error.response?.data || { message: 'Failed to fetch invoices' };
+    }
+  },
+
+  createInvoice: async (invoiceData) => {
+    try {
+      const response = await api.post('/api/admin/invoices', invoiceData);
+      return response.data;
+    } catch (error) {
+      logger.error('Error creating invoice:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        url: error.config?.url,
+        message: error.message
+      });
+      if (error.response) {
+        throw error;
+      }
+      throw error.response?.data || { message: 'Failed to create invoice' };
+    }
+  },
+
   // Analytics Endpoints
   getRevenueAnalytics: async (params = {}) => {
     try {
@@ -216,4 +271,3 @@ export const adminService = {
     }
   },
 };
-

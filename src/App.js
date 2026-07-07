@@ -37,6 +37,7 @@ import TransactionManagement from './pages/admin/TransactionManagement';
 import AdminOrders from './pages/admin/AdminOrders';
 import Analytics from './pages/admin/Analytics';
 import Settings from './pages/admin/Settings';
+import InvoiceGenerator from './pages/admin/InvoiceGenerator';
 import UserDashboard from './pages/UserDashboard';
 import UserProfile from './pages/UserProfile';
 import MyServiceBookings from './pages/MyServiceBookings';
@@ -71,6 +72,7 @@ function App() {
                       <Route path="rentals" element={<RentalManagement />} />
                       <Route path="rental-dashboard" element={<RentalDashboard />} />
                       <Route path="transactions" element={<TransactionManagement />} />
+                      <Route path="invoices" element={<InvoiceGenerator />} />
                       <Route path="users" element={<AdminUsers />} />
                       <Route path="enquiries" element={<ContactInquiries />} />
                       <Route path="analytics" element={<Analytics />} />
