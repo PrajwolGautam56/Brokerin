@@ -260,8 +260,9 @@ const generateInvoicePdf = async (invoice) => {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(71, 85, 105);
-  const notesText = invoice.notes || 'Please verify the client details and property information before sharing this invoice.';
-  doc.text(doc.splitTextToSize(notesText, noteWidth - 36), margin + 18, bottomTop + 46);
+  if (invoice.notes) {
+    doc.text(doc.splitTextToSize(invoice.notes, noteWidth - 36), margin + 18, bottomTop + 46);
+  }
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
