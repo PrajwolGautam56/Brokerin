@@ -15,6 +15,29 @@ import {
 
 const STATUS_TYPES = ['Active', 'Completed', 'Cancelled', 'On Hold'];
 
+const getRentalPaymentSummary = (rental) => {
+  const payments = Array.isArray(rental.payment_records) ? rental.payment_records : [];
+
+  return payments.reduce((summary, payment) => {
+    const amount = Number(payment.amount || 0);
+    if (payment.status === 'Paid') {
+      summary.paid += amount;
+    } else if (payment.status === 'Overdue') {
+      summary.overdue += amount;
+      summary.due += amount;
+    } else if (payment.status === 'Pending') {
+      summary.pending += amount;
+      summary.due += amount;
+    }
+    return summary;
+  }, {
+    paid: 0,
+    pending: 0,
+    overdue: 0,
+    due: 0
+  });
+};
+
 function RentalManagement() {
   const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -681,6 +704,7 @@ function RentalManagement() {
         ) : (
             filteredRentals.map((rental, index) => {
             const rentalId = rental._id || rental.id;
+            const paymentSummary = getRentalPaymentSummary(rental);
               const statusColors = {
                 'Active': 'from-green-500 via-emerald-500 to-green-600',
                 'Completed': 'from-blue-500 via-cyan-500 to-blue-600',
@@ -780,7 +804,7 @@ function RentalManagement() {
                           <div>
                             <div className="text-xs text-gray-500 font-medium mb-1">Monthly Rent</div>
                             <div className="text-sm font-semibold text-gray-900">
-                              ₹{rental.total_monthly_amount || 0}/mo
+                              ₹{Number(rental.total_monthly_amount || 0).toLocaleString()}/mo
                             </div>
                           </div>
                         </div>
@@ -842,20 +866,28 @@ function RentalManagement() {
                     )}
 
                     {/* Financial Summary */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                       <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl p-4 border-2 border-violet-200">
                         <div className="text-xs text-gray-600 font-medium mb-1">Total Deposit</div>
-                        <div className="text-2xl font-extrabold text-violet-700">₹{rental.total_deposit || 0}</div>
+                        <div className="text-2xl font-extrabold text-violet-700">₹{Number(rental.total_deposit || 0).toLocaleString()}</div>
                       </div>
                       <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border-2 border-blue-200">
                         <div className="text-xs text-gray-600 font-medium mb-1">Monthly Rent</div>
-                        <div className="text-2xl font-extrabold text-blue-700">₹{rental.total_monthly_amount || 0}</div>
+                        <div className="text-2xl font-extrabold text-blue-700">₹{Number(rental.total_monthly_amount || 0).toLocaleString()}</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-4 border-2 border-red-200">
+                        <div className="text-xs text-gray-600 font-medium mb-1">Due Amount</div>
+                        <div className="text-2xl font-extrabold text-red-700">₹{paymentSummary.due.toLocaleString()}</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          Pending ₹{paymentSummary.pending.toLocaleString()} | Overdue ₹{paymentSummary.overdue.toLocaleString()}
+                        </div>
                       </div>
                       <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200">
-                        <div className="text-xs text-gray-600 font-medium mb-1">Total Amount</div>
+                        <div className="text-xs text-gray-600 font-medium mb-1">Initial Amount</div>
                         <div className="text-2xl font-extrabold text-green-700">
-                          ₹{(rental.total_monthly_amount || 0) + (rental.total_deposit || 0)}
+                          ₹{(Number(rental.total_monthly_amount || 0) + Number(rental.total_deposit || 0)).toLocaleString()}
                         </div>
+                        <div className="text-xs text-gray-500 mt-1">Monthly rent + deposit</div>
                       </div>
                     </div>
 
@@ -1837,4 +1869,3 @@ function GeneratePaymentsModal({ rental, onClose, onGenerate }) {
 }
 
 export default RentalManagement;
-
