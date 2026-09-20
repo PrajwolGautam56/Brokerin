@@ -3,6 +3,8 @@ import { rentalService } from '../../../services/rentalService';
 import { CalendarIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import logger from '../../../utils/logger';
 
+const getRentalDueGroupKey = (due, index) => due.rental_id || due._id || `unidentified-${index}`;
+
 function MonthlyCollectionView({ collection }) {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [monthDetails, setMonthDetails] = useState(null);
@@ -137,10 +139,12 @@ function MonthlyCollectionView({ collection }) {
                   {duesDetails.all_dues && duesDetails.all_dues.length > 0 ? (
                     <div className="space-y-3">
                       {Object.values(
-                        duesDetails.all_dues.reduce((acc, due) => {
-                          const key = due.customer_email || 'unknown';
+                        duesDetails.all_dues.reduce((acc, due, index) => {
+                          const key = getRentalDueGroupKey(due, index);
                           if (!acc[key]) {
                             acc[key] = {
+                              group_key: key,
+                              rental_id: due.rental_id,
                               customer_name: due.customer_name || 'N/A',
                               customer_email: due.customer_email || 'N/A',
                               customer_phone: due.customer_phone || 'N/A',
@@ -158,10 +162,11 @@ function MonthlyCollectionView({ collection }) {
                       )
                         .sort((a, b) => b.total - a.total)
                         .map((customer) => (
-                          <div key={customer.customer_email} className="p-4 border rounded-lg bg-gray-50">
+                          <div key={customer.group_key} className="p-4 border rounded-lg bg-gray-50">
                             <div className="flex justify-between gap-3">
                               <div>
                                 <div className="font-semibold text-gray-900">{customer.customer_name}</div>
+                                <div className="text-xs text-violet-700 font-medium">{customer.rental_id || 'Rental ID unavailable'}</div>
                                 <div className="text-xs text-gray-600">{customer.customer_email}</div>
                                 <div className="text-xs text-gray-600">{customer.customer_phone}</div>
                               </div>
@@ -198,4 +203,3 @@ function MonthlyCollectionView({ collection }) {
 }
 
 export default MonthlyCollectionView;
-

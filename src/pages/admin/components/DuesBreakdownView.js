@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react';
 import { rentalService } from '../../../services/rentalService';
 import { XMarkIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 
+const getCustomerGroupKey = (customer, index) => (
+  customer.group_key ||
+  customer.rental_id ||
+  customer._id ||
+  `unidentified-${index}`
+);
+
 function DuesBreakdownView({ totalAmount, byCustomer, allDues, onClose }) {
   const [filter, setFilter] = useState('all');
   const [expandedCustomers, setExpandedCustomers] = useState(new Set());
@@ -50,12 +57,12 @@ function DuesBreakdownView({ totalAmount, byCustomer, allDues, onClose }) {
     fetchDuesBreakdown();
   }, [filter]);
 
-  const toggleCustomer = (email) => {
+  const toggleCustomer = (groupKey) => {
     const newExpanded = new Set(expandedCustomers);
-    if (newExpanded.has(email)) {
-      newExpanded.delete(email);
+    if (newExpanded.has(groupKey)) {
+      newExpanded.delete(groupKey);
     } else {
-      newExpanded.add(email);
+      newExpanded.add(groupKey);
     }
     setExpandedCustomers(newExpanded);
   };
@@ -127,21 +134,22 @@ function DuesBreakdownView({ totalAmount, byCustomer, allDues, onClose }) {
         </div>
       )}
 
-      {/* Grouped by Customer */}
+      {/* Grouped by Rental */}
       {duesData.byCustomer && duesData.byCustomer.length > 0 && (
         <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Grouped by Customer</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Grouped by Rental</h3>
           <div className="space-y-3">
             {duesData.byCustomer.map((customer, idx) => {
-              const isExpanded = expandedCustomers.has(customer.customer_email);
+              const groupKey = getCustomerGroupKey(customer, idx);
+              const isExpanded = expandedCustomers.has(groupKey);
               return (
                 <div
-                  key={idx}
+                  key={groupKey || idx}
                   className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                 >
                   <div
                     className="flex justify-between items-start cursor-pointer"
-                    onClick={() => toggleCustomer(customer.customer_email)}
+                    onClick={() => toggleCustomer(groupKey)}
                   >
                     <div className="flex-1">
                       <h4 className="font-semibold text-gray-900 mb-1">{customer.customer_name}</h4>
@@ -311,4 +319,3 @@ function DuesBreakdownView({ totalAmount, byCustomer, allDues, onClose }) {
 }
 
 export default DuesBreakdownView;
-

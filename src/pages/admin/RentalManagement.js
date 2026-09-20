@@ -15,6 +15,9 @@ import {
 
 const STATUS_TYPES = ['Active', 'Completed', 'Cancelled', 'On Hold'];
 
+const isPaymentOverdue = (payment) => payment.status === 'Overdue' ||
+  (payment.status === 'Pending' && payment.dueDate && new Date(payment.dueDate) < new Date());
+
 const getRentalPaymentSummary = (rental) => {
   const payments = Array.isArray(rental.payment_records) ? rental.payment_records : [];
 
@@ -22,7 +25,7 @@ const getRentalPaymentSummary = (rental) => {
     const amount = Number(payment.amount || 0);
     if (payment.status === 'Paid') {
       summary.paid += amount;
-    } else if (payment.status === 'Overdue') {
+    } else if (isPaymentOverdue(payment)) {
       summary.overdue += amount;
       summary.due += amount;
     } else if (payment.status === 'Pending') {
@@ -866,7 +869,7 @@ function RentalManagement() {
                     )}
 
                     {/* Financial Summary */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
                       <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl p-4 border-2 border-violet-200">
                         <div className="text-xs text-gray-600 font-medium mb-1">Total Deposit</div>
                         <div className="text-2xl font-extrabold text-violet-700">₹{Number(rental.total_deposit || 0).toLocaleString()}</div>
@@ -876,11 +879,17 @@ function RentalManagement() {
                         <div className="text-2xl font-extrabold text-blue-700">₹{Number(rental.total_monthly_amount || 0).toLocaleString()}</div>
                       </div>
                       <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-4 border-2 border-red-200">
-                        <div className="text-xs text-gray-600 font-medium mb-1">Due Amount</div>
+                        <div className="text-xs text-gray-600 font-medium mb-1">Total Due</div>
                         <div className="text-2xl font-extrabold text-red-700">₹{paymentSummary.due.toLocaleString()}</div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          Pending ₹{paymentSummary.pending.toLocaleString()} | Overdue ₹{paymentSummary.overdue.toLocaleString()}
-                        </div>
+                        <div className="text-xs text-gray-500 mt-1">Pending + overdue</div>
+                      </div>
+                      <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                        <div className="text-xs text-gray-600 font-medium mb-1">Pending Due</div>
+                        <div className="text-2xl font-extrabold text-yellow-800 break-words">₹{paymentSummary.pending.toLocaleString()}</div>
+                      </div>
+                      <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+                        <div className="text-xs text-gray-600 font-medium mb-1">Overdue Due</div>
+                        <div className="text-2xl font-extrabold text-red-700 break-words">₹{paymentSummary.overdue.toLocaleString()}</div>
                       </div>
                       <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200">
                         <div className="text-xs text-gray-600 font-medium mb-1">Initial Amount</div>
@@ -930,8 +939,7 @@ function RentalManagement() {
                             <tbody className="divide-y divide-gray-200">
                               {rental.payment_records.map((payment) => {
                                 const [year, month] = payment.month.split('-');
-                                const isOverdue = payment.status === 'Overdue' || 
-                                  (payment.status === 'Pending' && payment.dueDate && new Date(payment.dueDate) < new Date());
+                                const isOverdue = isPaymentOverdue(payment);
                                 return (
                                   <tr 
                                     key={payment._id} 
@@ -953,11 +961,11 @@ function RentalManagement() {
                                       <td className="px-4 py-3">
                                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
                                           payment.status === 'Paid' ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-300' :
-                                          payment.status === 'Overdue' ? 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-300' :
+                                          isOverdue ? 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-300' :
                                           payment.status === 'Partial' ? 'bg-gradient-to-r from-orange-100 to-amber-100 text-orange-800 border border-orange-300' :
                                           'bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border border-yellow-300'
                                       }`}>
-                                        {payment.status}
+                                        {isOverdue ? 'Overdue' : payment.status}
                                       </span>
                                     </td>
                                       <td className="px-4 py-3">

@@ -7,6 +7,8 @@ import {
 } from '@heroicons/react/24/outline';
 import MonthlyCollectionView from './components/MonthlyCollectionView';
 
+const getRentalDueGroupKey = (due, index) => due.rental_id || due._id || `unidentified-${index}`;
+
 function RentalDashboard() {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -66,10 +68,12 @@ function RentalDashboard() {
     duesTab === 'pending' ? pendingDues : duesTab === 'overdue' ? overdueDues : allDues;
 
   const groupedVisibleDues = Object.values(
-    visibleDues.reduce((acc, due) => {
-      const key = due.customer_email || 'unknown';
+    visibleDues.reduce((acc, due, index) => {
+      const key = getRentalDueGroupKey(due, index);
       if (!acc[key]) {
         acc[key] = {
+          group_key: key,
+          rental_id: due.rental_id,
           customer_name: due.customer_name,
           customer_email: due.customer_email,
           customer_phone: due.customer_phone,
@@ -189,10 +193,11 @@ function RentalDashboard() {
             <div className="text-sm text-gray-500 p-4 bg-gray-50 rounded-lg border">No dues in this category.</div>
           ) : (
             groupedVisibleDues.map((customer) => (
-              <div key={customer.customer_email} className="p-4 border rounded-lg bg-gray-50">
+              <div key={customer.group_key} className="p-4 border rounded-lg bg-gray-50">
                 <div className="flex justify-between gap-3">
                   <div>
                     <div className="font-semibold text-gray-900">{customer.customer_name || 'N/A'}</div>
+                    <div className="text-xs text-violet-700 font-medium">{customer.rental_id || 'Rental ID unavailable'}</div>
                     <div className="text-xs text-gray-600">{customer.customer_email}</div>
                     <div className="text-xs text-gray-600">{customer.customer_phone}</div>
                   </div>
@@ -219,4 +224,3 @@ function RentalDashboard() {
 }
 
 export default RentalDashboard;
-

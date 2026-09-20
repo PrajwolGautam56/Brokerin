@@ -27,7 +27,6 @@ const navigation = [
   { name: 'Property Requests', href: '/admin/property-requests', icon: ClipboardDocumentListIcon },
   { name: 'Furniture Requests', href: '/admin/furniture-requests', icon: ClipboardDocumentListIcon },
   { name: 'Rental Management', href: '/admin/rentals', icon: KeyIcon },
-  { name: 'Rental Dashboard', href: '/admin/rental-dashboard', icon: ChartBarIcon },
   { name: 'Transactions', href: '/admin/transactions', icon: CreditCardIcon },
   { name: 'Invoices', href: '/admin/invoices', icon: DocumentTextIcon },
   { name: 'Users', href: '/admin/users', icon: UserGroupIcon },

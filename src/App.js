@@ -1,5 +1,5 @@
 import './index.css';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 import Home from './pages/Home';
@@ -32,7 +32,6 @@ import AdminFurniture from './pages/admin/AdminFurniture';
 import AdminUsers from './pages/admin/AdminUsers';
 import ContactInquiries from './pages/admin/ContactInquiries';
 import RentalManagement from './pages/admin/RentalManagement';
-import RentalDashboard from './pages/admin/RentalDashboard';
 import TransactionManagement from './pages/admin/TransactionManagement';
 import AdminOrders from './pages/admin/AdminOrders';
 import Analytics from './pages/admin/Analytics';
@@ -70,7 +69,7 @@ function App() {
                       <Route path="furniture-requests" element={<FurnitureRequests />} />
                       <Route path="orders" element={<AdminOrders />} />
                       <Route path="rentals" element={<RentalManagement />} />
-                      <Route path="rental-dashboard" element={<RentalDashboard />} />
+                      <Route path="rental-dashboard" element={<Navigate to="/admin/rentals" replace />} />
                       <Route path="transactions" element={<TransactionManagement />} />
                       <Route path="invoices" element={<InvoiceGenerator />} />
                       <Route path="users" element={<AdminUsers />} />
