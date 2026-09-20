@@ -31,7 +31,7 @@ export const cartService = {
       
       // Log full error for debugging
       logger.error('Add to cart error:', {
-        status: error.response?.status,
+        http_status: error.response?.status,
         message: errorData?.message,
         availability: errorData?.availability,
         status: errorData?.status,
@@ -136,4 +136,3 @@ export const cartService = {
 };
 
 export default cartService;
-

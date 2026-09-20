@@ -26,12 +26,12 @@ const serviceBookingService = {
       
       // Handle timeout specifically
       if (error.isTimeout || error.code === 'TIMEOUT' || error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-        throw { message: 'Request timed out. The server is taking longer than expected. Please check your connection and try again.' };
+        throw new Error('Request timed out. The server is taking longer than expected. Please check your connection and try again.');
       }
       
       // Handle network errors
       if (error.isNetworkError || error.code === 'NETWORK_ERROR') {
-        throw { message: 'Network error. Please check your internet connection and try again.' };
+        throw new Error('Network error. Please check your internet connection and try again.');
       }
       
       throw error.response?.data || { message: 'Failed to create booking' };
@@ -136,4 +136,3 @@ const serviceBookingService = {
 };
 
 export default serviceBookingService;
-
