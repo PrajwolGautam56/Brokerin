@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import logger from '../../utils/logger';
 import { rentalService } from '../../services/rentalService';
+import RentalDuesView from './components/RentalDuesView';
 import {
   PlusIcon,
   PencilIcon,
@@ -42,6 +43,7 @@ const getRentalPaymentSummary = (rental) => {
 };
 
 function RentalManagement() {
+  const [managementView, setManagementView] = useState('All Rentals');
   const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -633,6 +635,16 @@ function RentalManagement() {
         </div>
       )}
 
+        <div className="flex flex-wrap gap-2 mb-6" role="group" aria-label="Rental management views">
+          {['All Rentals', 'Overdue', 'Pending'].map(view => (
+            <button key={view} onClick={() => setManagementView(view)} aria-pressed={managementView === view}
+              className={`px-5 py-3 rounded-lg font-semibold border ${managementView === view ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'}`}>
+              {view === 'All Rentals' ? view : `${view} Dues`}
+            </button>
+          ))}
+        </div>
+        {managementView !== 'All Rentals' && <RentalDuesView status={managementView} onPaymentUpdated={() => fetchRentals(currentPage)} />}
+        <div className={managementView === 'All Rentals' ? '' : 'hidden'}>
         {/* Modern Filters Section with Glassmorphism */}
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-6 mb-8 border border-white/50 relative overflow-hidden">
           {/* Subtle gradient overlay */}
@@ -1167,6 +1179,8 @@ function RentalManagement() {
             </div>
           </div>
         )}
+      </div>
+
       </div>
 
       {/* Modern Add/Edit Modal with Glassmorphism */}
