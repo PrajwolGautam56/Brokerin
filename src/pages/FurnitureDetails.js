@@ -22,7 +22,7 @@ function FurnitureDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const { addItem, items } = useFurnitureCart();
   const locationItem = location.state?.item;
   
@@ -731,4 +731,3 @@ function FurnitureDetails() {
 }
 
 export default FurnitureDetails;
-

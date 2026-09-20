@@ -322,8 +322,8 @@ function Furniture() {
       
       setFurnitureItems(furnitureData);
       
-      // Clear error if we have items, set error only if no items and not loading
-      if (furnitureData.length === 0 && !loading) {
+      // The request has completed, so an empty result can be shown now.
+      if (furnitureData.length === 0) {
         const hasActiveFilters = filters.category || filters.condition || filters.status || filters.minPrice || filters.maxPrice || filters.listingType;
         if (hasActiveFilters) {
           setError('No furniture items found matching your filters. Try adjusting your search criteria.');
@@ -1239,4 +1239,4 @@ function RequestModal({ furniture, mode, onClose, setError, setSuccess }) {
   );
 }
 
-export default Furniture; 
+export default Furniture;

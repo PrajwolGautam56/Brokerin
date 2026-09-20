@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import logger from '../../utils/logger';
 import { adminService } from '../../services/adminService';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
@@ -12,6 +12,27 @@ const tabs = [
   { id: 'analytics', name: 'Analytics & Tracking' },
 ];
 
+const getDefaultSettings = () => ({
+  system: {
+    emailProvider: 'smtp', paymentGateway: 'razorpay',
+    cloudinaryEnabled: true, googleAuthEnabled: true
+  },
+  business: {
+    companyName: 'BrokerIn', contactEmail: '', contactPhone: '', address: '',
+    businessHours: '9 AM - 6 PM', timezone: 'Asia/Kolkata'
+  },
+  notifications: {
+    emailEnabled: true, smsEnabled: false,
+    reminderSchedule: { paymentReminders: 'daily', serviceReminders: 'daily', time: '09:00' }
+  },
+  userManagement: {
+    requireEmailVerification: true, requirePhoneVerification: false,
+    passwordMinLength: 8, sessionTimeout: 24
+  },
+  content: { homepageBanners: [], featuredProperties: [], featuredFurniture: [] },
+  analytics: { googleAnalyticsId: '', facebookPixelId: '' }
+});
+
 function Settings() {
   const [activeTab, setActiveTab] = useState('business');
   const [loading, setLoading] = useState(false);
@@ -19,13 +40,7 @@ function Settings() {
   const [error, setError] = useState(null);
   const [settings, setSettings] = useState(null);
   const [testEmailResult, setTestEmailResult] = useState(null);
-  const [testPaymentResult, setTestPaymentResult] = useState(null);
-
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -74,49 +89,11 @@ function Settings() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Default settings fallback when backend route doesn't exist
-  const getDefaultSettings = () => ({
-    system: {
-      emailProvider: 'smtp',
-      paymentGateway: 'razorpay',
-      cloudinaryEnabled: true,
-      googleAuthEnabled: true
-    },
-    business: {
-      companyName: 'BrokerIn',
-      contactEmail: '',
-      contactPhone: '',
-      address: '',
-      businessHours: '9 AM - 6 PM',
-      timezone: 'Asia/Kolkata'
-    },
-    notifications: {
-      emailEnabled: true,
-      smsEnabled: false,
-      reminderSchedule: {
-        paymentReminders: 'daily',
-        serviceReminders: 'daily',
-        time: '09:00'
-      }
-    },
-    userManagement: {
-      requireEmailVerification: true,
-      requirePhoneVerification: false,
-      passwordMinLength: 8,
-      sessionTimeout: 24
-    },
-    content: {
-      homepageBanners: [],
-      featuredProperties: [],
-      featuredFurniture: []
-    },
-    analytics: {
-      googleAnalyticsId: '',
-      facebookPixelId: ''
-    }
-  });
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   const handleSettingChange = (section, field, value) => {
     setSettings(prev => ({
@@ -179,27 +156,6 @@ function Settings() {
       logger.error('Error testing email:', error);
       setTestEmailResult({ success: false, message: error.message || 'Failed to send test email' });
       toast.error(error.message || 'Failed to send test email');
-    }
-  };
-
-  const handleTestPayment = async () => {
-    try {
-      setTestPaymentResult(null);
-      const testData = {
-        amount: 100,
-        currency: 'INR'
-      };
-      const response = await adminService.testPayment(testData);
-      if (response.success) {
-        setTestPaymentResult({ success: true, message: 'Payment gateway test successful!' });
-        toast.success('Payment gateway test successful');
-      } else {
-        throw new Error(response.message || 'Failed to test payment gateway');
-      }
-    } catch (error) {
-      logger.error('Error testing payment:', error);
-      setTestPaymentResult({ success: false, message: error.message || 'Failed to test payment gateway' });
-      toast.error(error.message || 'Failed to test payment gateway');
     }
   };
 
@@ -645,4 +601,3 @@ function Settings() {
 }
 
 export default Settings;
-

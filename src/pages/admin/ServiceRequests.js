@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import logger from '../../utils/logger';
 import serviceBookingService from '../../services/serviceBookingService';
-import { CheckCircleIcon, XCircleIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, EyeIcon } from '@heroicons/react/24/outline';
 
 const STATUS_TYPES = ['requested', 'accepted', 'ongoing', 'completed', 'cancelled'];
 const STATUS_LABELS = {
@@ -495,4 +495,4 @@ function ServiceRequests() {
   );
 }
 
-export default ServiceRequests; 
+export default ServiceRequests;

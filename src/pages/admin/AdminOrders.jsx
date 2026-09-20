@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { orderService } from '../../services/orderService';
 import { formatPrice } from '../../utils/priceFormatter';
 import logger from '../../utils/logger';
@@ -16,11 +16,7 @@ function AdminOrders() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const ordersPerPage = 20;
 
-  useEffect(() => {
-    fetchOrders();
-  }, [currentPage, filterStatus, searchQuery]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -113,7 +109,11 @@ function AdminOrders() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, filterStatus, searchQuery]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   const handleStatusUpdate = async (orderId, newStatus, additionalData = {}) => {
     try {
@@ -582,4 +582,3 @@ function AdminOrders() {
 }
 
 export default AdminOrders;
-

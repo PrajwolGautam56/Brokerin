@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import logger from '../../utils/logger';
 import { adminService } from '../../services/adminService';
 import {
-  ChartBarIcon,
   CurrencyDollarIcon,
   UserGroupIcon,
   BuildingOfficeIcon,
@@ -622,4 +621,3 @@ function Analytics() {
 }
 
 export default Analytics;
-

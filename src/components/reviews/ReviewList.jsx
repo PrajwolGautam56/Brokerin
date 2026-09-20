@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { reviewService } from '../../services/reviewService';
 import { useAuth } from '../../context/AuthContext';
 import RatingStars from './RatingStars';
@@ -12,11 +12,7 @@ function ReviewList({ furnitureId }) {
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    loadReviews();
-  }, [furnitureId, page]);
-
-  const loadReviews = async () => {
+  const loadReviews = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -38,7 +34,11 @@ function ReviewList({ furnitureId }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [furnitureId, page]);
+
+  useEffect(() => {
+    loadReviews();
+  }, [loadReviews]);
 
   const handleMarkHelpful = async (reviewId) => {
     if (!isAuthenticated) {
@@ -210,4 +210,3 @@ function ReviewList({ furnitureId }) {
 }
 
 export default ReviewList;
-

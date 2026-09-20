@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import logger from '../utils/logger';
 import { authService } from '../services/authService';
 import { tokenService } from '../services/tokenService';
@@ -13,18 +13,18 @@ export function AuthProvider({ children }) {
   /**
    * Stop token refresh scheduler
    */
-  const stopTokenRefreshScheduler = () => {
+  const stopTokenRefreshScheduler = useCallback(() => {
     if (refreshIntervalRef.current) {
       clearInterval(refreshIntervalRef.current);
       refreshIntervalRef.current = null;
     }
-  };
+  }, []);
 
   /**
    * Start proactive token refresh scheduler
    * Checks every 30 minutes and refreshes if token expires in less than 1 hour
    */
-  const startTokenRefreshScheduler = () => {
+  const startTokenRefreshScheduler = useCallback(() => {
     // Clear any existing interval
     if (refreshIntervalRef.current) {
       clearInterval(refreshIntervalRef.current);
@@ -56,7 +56,7 @@ export function AuthProvider({ children }) {
 
     // Then check every 30 minutes
     refreshIntervalRef.current = setInterval(checkAndRefresh, 30 * 60 * 1000);
-  };
+  }, [stopTokenRefreshScheduler]);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -77,7 +77,7 @@ export function AuthProvider({ children }) {
     return () => {
       stopTokenRefreshScheduler();
     };
-  }, [user]);
+  }, [user, startTokenRefreshScheduler, stopTokenRefreshScheduler]);
 
   const login = (userData) => {
     setUser(userData);
@@ -112,4 +112,4 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-} 
+}

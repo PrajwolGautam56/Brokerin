@@ -14,7 +14,7 @@ function Properties() {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState({
+  const [, setPagination] = useState({
     total: 0,
     page: 1,
     pages: 1
@@ -551,4 +551,4 @@ function Properties() {
   );
 }
 
-export default Properties; 
+export default Properties;

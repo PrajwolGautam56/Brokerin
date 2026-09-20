@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import logger from '../../utils/logger';
 import {
-  HomeIcon,
   UserGroupIcon,
   BuildingOfficeIcon,
   WrenchScrewdriverIcon,
@@ -327,4 +326,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard; 
+export default Dashboard;

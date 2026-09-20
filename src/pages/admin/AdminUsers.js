@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import logger from '../../utils/logger';
 import { userService } from '../../services/userService';
-import { XMarkIcon, CheckCircleIcon, MagnifyingGlassIcon, UserIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, MagnifyingGlassIcon, UserIcon } from '@heroicons/react/24/outline';
 
 function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -18,11 +18,7 @@ function AdminUsers() {
   });
   const [pagination, setPagination] = useState({});
 
-  useEffect(() => {
-    fetchUsers();
-  }, [filters]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -71,7 +67,11 @@ function AdminUsers() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const viewUserDetails = async (userId) => {
     try {
@@ -395,4 +395,3 @@ function AdminUsers() {
 }
 
 export default AdminUsers;
-

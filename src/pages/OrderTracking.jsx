@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { orderService } from '../services/orderService';
 import { rentalService } from '../services/rentalService';
@@ -14,12 +14,7 @@ function OrderTracking() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    fetchOrder();
-  }, [id]);
-
-  const fetchOrder = async () => {
+  const fetchOrder = useCallback(async () => {
     try {
       setLoading(true);
       // Try orderService first, then fallback to rentalService
@@ -43,7 +38,12 @@ function OrderTracking() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    fetchOrder();
+  }, [fetchOrder]);
 
   const handleCancelOrder = async () => {
     if (!window.confirm('Are you sure you want to cancel this order?')) return;
@@ -466,4 +466,3 @@ function OrderTracking() {
 }
 
 export default OrderTracking;
-

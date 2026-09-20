@@ -13,7 +13,6 @@ function Hero() {
     propertyType: '',
   });
   const [previewProperties, setPreviewProperties] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchPreviewProperties();
@@ -44,8 +43,6 @@ function Hero() {
       }
     } catch (error) {
       logger.error('Error fetching preview properties:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -245,4 +242,4 @@ function PropertyPreviewCard({ property }) {
   );
 }
 
-export default Hero; 
+export default Hero;

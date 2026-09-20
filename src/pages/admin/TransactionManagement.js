@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { transactionService } from '../../services/transactionService';
 import DeliveryStatusBadge from '../../components/transactions/DeliveryStatusBadge';
 import PaymentStatusBadge from '../../components/transactions/PaymentStatusBadge';
@@ -320,4 +320,3 @@ function TransactionManagement() {
 }
 
 export default TransactionManagement;
-

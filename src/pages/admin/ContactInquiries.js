@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import logger from '../../utils/logger';
 import { contactService } from '../../services/contactService';
 import { TrashIcon, EyeIcon, XMarkIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
@@ -17,11 +17,7 @@ function ContactInquiries() {
     limit: 50
   });
 
-  useEffect(() => {
-    fetchInquiries();
-  }, [filters]);
-
-  const fetchInquiries = async () => {
+  const fetchInquiries = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -45,7 +41,11 @@ function ContactInquiries() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, activeStatus]);
+
+  useEffect(() => {
+    fetchInquiries();
+  }, [fetchInquiries]);
 
   const handleStatusChange = async (inquiryId, newStatus) => {
     try {
@@ -407,4 +407,3 @@ function ContactInquiries() {
 }
 
 export default ContactInquiries;
-

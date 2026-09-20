@@ -1,6 +1,5 @@
 import Hero from '../components/home/Hero';
 import FeaturedProperties from '../components/home/FeaturedProperties';
-import PropertyList from '../components/home/PropertyList';
 import AboutSection from '../components/home/AboutSection';
 import TestimonialsSection from '../components/home/TestimonialsSection';
 import ServicesSection from '../components/home/ServicesSection';
@@ -48,4 +47,4 @@ function Home() {
   );
 }
 
-export default Home; 
+export default Home;
