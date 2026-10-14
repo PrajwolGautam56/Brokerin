@@ -22,6 +22,31 @@ beforeAll(() => {
   };
 });
 
+test('monthly summary filters by month and remaining balance then updates after payment', async () => {
+  const alice = rental('1', 'Alice');
+  alice.payment_records[0].month = '2026-10';
+  const bob = rental('2', 'Bob', 'Paid');
+  bob.payment_records[0].month = '2026-10';
+  rentalService.getAllRentals.mockResolvedValue({ data: [alice, bob, rental('3', 'January')], pagination: { total: 3 } });
+  rentalService.updatePaymentRecord.mockResolvedValue({ success: true });
+  render(<RentalDuesView status="Monthly Summary" onPaymentUpdated={jest.fn()} />);
+  fireEvent.change(screen.getByLabelText('Rent Month'), { target: { value: '2026-10' } });
+  await screen.findByRole('button', { name: 'Alice' });
+  expect(screen.queryByRole('button', { name: 'January' })).toBeNull();
+  expect(screen.getByRole('button', { name: /Total Rent/ }).textContent).toContain('1,000');
+  fireEvent.click(screen.getByRole('button', { name: /Remaining ₹/ }));
+  expect(screen.queryByRole('button', { name: 'Bob' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Alice' }));
+  fireEvent.click(within(await screen.findByRole('dialog')).getByText('Mark Paid'));
+  fireEvent.click(screen.getByText('Confirm Paid'));
+  await screen.findByText('Paid', { selector: 'td' });
+  fireEvent.click(screen.getByText('Close'));
+  expect(screen.getByRole('button', { name: /Remaining ₹/ }).textContent).toContain('₹0');
+  expect(screen.getByRole('button', { name: /Collected Rent/ }).textContent).toContain('1,000');
+  fireEvent.change(screen.getByLabelText('Rent Month'), { target: { value: '2026-01' } });
+  expect(screen.getByRole('button', { name: 'January' })).toBeTruthy();
+});
+
 test('keeps shared-email accounts separate and excludes paid and cart payments', () => {
   const records = [rental('1', 'Alice'), rental('2', 'Bob'), rental('3', 'Paid', 'Paid'),
     { ...rental('4', 'Cart'), order_source: 'cart' }, rental('5', 'Pending', 'Pending')];

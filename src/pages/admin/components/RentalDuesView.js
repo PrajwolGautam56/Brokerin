@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { rentalService } from '../../../services/rentalService';
 import { Dialog } from '@headlessui/react';
+import { currentRentalMonth, rentalMonthSummary } from '../../../utils/rentalMonthSummary';
 
 const formatMonth = month => {
   if (!/^\d{4}-\d{2}$/.test(month || '')) return month || '-';
@@ -8,19 +9,22 @@ const formatMonth = month => {
   return new Date(year, number - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 };
 
-export const getDueRows = (rentals, status, search = '') => {
+export const getDueRows = (rentals, status, search = '', month = '') => {
   const query = search.trim().toLowerCase();
   return rentals.filter(rental => rental.order_source !== 'cart').flatMap(rental => {
     const matches = [rental.customer_name, rental.customer_email, rental.customer_phone, rental.rental_id]
       .some(value => String(value || '').toLowerCase().includes(query));
     if (!matches) return [];
     return (rental.payment_records || [])
-      .filter(payment => payment.status === status)
+      .filter(payment => (status === 'All' || payment.status === status || (status === 'Remaining' && ['Pending', 'Overdue'].includes(payment.status))) && (!month || payment.month === month))
       .map(payment => ({ rental, payment }));
   }).sort((a, b) => new Date(a.payment.dueDate || 0) - new Date(b.payment.dueDate || 0));
 };
 
 function RentalDuesView({ status, onPaymentUpdated }) {
+  const [month, setMonth] = useState(() => currentRentalMonth());
+  const [monthBucket, setMonthBucket] = useState('All');
+  const isMonthly = status === 'Monthly Summary';
   const [rentals, setRentals] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -62,7 +66,8 @@ function RentalDuesView({ status, onPaymentUpdated }) {
 
   useEffect(() => { loadRentals(); }, [loadRentals]);
 
-  const rows = getDueRows(rentals, status, search);
+  const summary = rentalMonthSummary(rentals, month);
+  const rows = getDueRows(rentals, isMonthly ? monthBucket : status, search, isMonthly ? month : '');
   const total = rows.reduce((sum, { payment }) => sum + Number(payment.amount || 0), 0);
   const customerCount = new Set(rows.map(({ rental }) => rental._id)).size;
   const accounts = Array.from(rows.reduce((groups, row) => {
@@ -137,29 +142,53 @@ function RentalDuesView({ status, onPaymentUpdated }) {
     <section className="mt-6" aria-label={`${status} dues`}>
       <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
         <div>
-          <h2 className="text-xl font-bold">{status} Dues</h2>
+          <h2 className="text-xl font-bold">{isMonthly ? 'Monthly Rental Summary' : `${status} Dues`}</h2>
           {!loading && !error && <p className="text-sm text-gray-600">{customerCount} rental accounts · {rows.length} payments · ₹{total.toLocaleString()}</p>}
         </div>
         <button onClick={loadRentals} disabled={loading || !!busy} className="px-4 py-2 rounded-lg border bg-white disabled:opacity-50">Refresh</button>
       </div>
+      {isMonthly && <div className="mb-6">
+        <label className="block text-sm font-semibold mb-4">Rent Month
+          <input type="month" required value={month} onChange={event => { if (event.target.value) { setMonth(event.target.value); setMonthBucket('All'); } }} className="block border rounded-lg p-2 mt-1 bg-white" />
+        </label>
+        <p className="text-sm text-gray-600 mb-3">{formatMonth(month)} rent records, with payment status as of today. All offline rental accounts.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+          {[
+            ['Total Rent', summary.total, 'All'], ['Collected Rent', summary.Paid, 'Paid'],
+            ['Pending', summary.Pending, 'Pending'], ['Overdue', summary.Overdue, 'Overdue'],
+            ['Remaining', summary.remaining, 'Remaining']
+          ].map(([label, amount, bucket]) => <button key={label} onClick={() => setMonthBucket(bucket)} className="text-left bg-white border rounded-lg p-4 hover:border-gray-600">
+            <span className="block text-sm text-gray-600">{label}</span>
+            <span className={`block text-2xl font-bold break-words ${label === 'Overdue' ? 'text-red-700' : label === 'Collected Rent' ? 'text-green-700' : 'text-gray-900'}`}>{loading || error ? '—' : `₹${amount.toLocaleString()}`}</span>
+          </button>)}
+        </div>
+        {!loading && !error && <>
+          <p className="text-sm text-gray-600 mt-3">Cash received during {formatMonth(month)}: <strong>₹{summary.received.toLocaleString()}</strong> (by paid date, including rent from other months).</p>
+          {(summary.Partial > 0 || summary.unknown > 0) && <p role="alert" className="mt-3 p-3 bg-yellow-50 text-yellow-900">₹{(summary.Partial + summary.unknown).toLocaleString()} in partial or unclassified records needs review. These records are excluded from collected and remaining amounts because the paid portion is not recorded.</p>}
+          {!summary.records && <p className="mt-3 text-gray-600">No rent records for this month.</p>}
+        </>}
+        <div className="flex flex-wrap gap-2 mt-4" role="group" aria-label="Monthly payment status">
+          {['All', 'Paid', 'Pending', 'Overdue', 'Remaining', 'Partial'].map(bucket => <button key={bucket} onClick={() => setMonthBucket(bucket)} aria-pressed={monthBucket === bucket} className={`px-3 py-2 border rounded-lg ${monthBucket === bucket ? 'bg-gray-900 text-white' : 'bg-white'}`}>{bucket}</button>)}
+        </div>
+      </div>}
       <input aria-label="Search customers with dues" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search customer, phone, email or rental ID" className="w-full rounded-lg border border-gray-300 px-4 py-3 mb-4" />
       {error && <p role="alert" className="p-3 mb-4 bg-red-50 text-red-800">{error}</p>}
       {message && <p role="status" className="p-3 mb-4 bg-green-50 text-green-800">{message}</p>}
       {loading ? <p role="status" className="py-8">Loading all rental dues...</p> : (
         <div className="overflow-x-auto bg-white border rounded-lg">
           <table className="w-full text-sm text-left">
-            <thead className="bg-gray-100"><tr>{['Customer / Rental', 'Contact', `${status} Months`, 'Total Amount', 'Details'].map(label => <th key={label} className="p-4">{label}</th>)}</tr></thead>
+            <thead className="bg-gray-100"><tr>{['Customer / Rental', 'Contact', isMonthly ? 'Month / Status' : `${status} Months`, 'Total Amount', 'Details'].map(label => <th key={label} className="p-4">{label}</th>)}</tr></thead>
             <tbody>
               {accounts.map(({ rental, payments, total: accountTotal }) => {
                 return <tr key={rental._id} className="border-t">
                   <td className="p-4"><button onClick={() => setProfileId(rental._id)} className="font-semibold text-blue-700 underline">{rental.customer_name}</button><div className="text-gray-600">{rental.rental_id || rental._id}</div></td>
                   <td className="p-4"><div>{rental.customer_phone || '-'}</div><div className="break-all">{rental.customer_email || '-'}</div></td>
-                  <td className="p-4">{payments.map(payment => <div key={payment._id}>{formatMonth(payment.month)}: ₹{Number(payment.amount || 0).toLocaleString()}</div>)}</td>
+                  <td className="p-4">{payments.map(payment => <div key={payment._id}>{formatMonth(payment.month)}: ₹{Number(payment.amount || 0).toLocaleString()}{isMonthly ? ` (${payment.status})` : ''}</div>)}</td>
                   <td className="p-4 font-bold whitespace-nowrap">₹{accountTotal.toLocaleString()}</td>
                   <td className="p-4"><button onClick={() => setProfileId(rental._id)} className="px-3 py-2 border rounded-lg text-blue-700">View Account</button></td>
                 </tr>;
               })}
-              {!rows.length && <tr><td colSpan={5} className="p-8 text-center text-gray-600">No {status.toLowerCase()} payments found.</td></tr>}
+              {!rows.length && <tr><td colSpan={5} className="p-8 text-center text-gray-600">{isMonthly ? 'No matching payments for this month.' : `No ${status.toLowerCase()} payments found.`}</td></tr>}
             </tbody>
           </table>
         </div>

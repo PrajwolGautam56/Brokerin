@@ -43,7 +43,7 @@ const getRentalPaymentSummary = (rental) => {
 };
 
 function RentalManagement() {
-  const [managementView, setManagementView] = useState('All Rentals');
+  const [managementView, setManagementView] = useState('Monthly Summary');
   const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -636,10 +636,10 @@ function RentalManagement() {
       )}
 
         <div className="flex flex-wrap gap-2 mb-6" role="group" aria-label="Rental management views">
-          {['All Rentals', 'Overdue', 'Pending'].map(view => (
+          {['Monthly Summary', 'All Rentals', 'Overdue', 'Pending'].map(view => (
             <button key={view} onClick={() => setManagementView(view)} aria-pressed={managementView === view}
               className={`px-5 py-3 rounded-lg font-semibold border ${managementView === view ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'}`}>
-              {view === 'All Rentals' ? view : `${view} Dues`}
+              {view === 'All Rentals' || view === 'Monthly Summary' ? view : `${view} Dues`}
             </button>
           ))}
         </div>
