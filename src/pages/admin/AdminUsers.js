@@ -4,6 +4,11 @@ import { userService } from '../../services/userService';
 import { XMarkIcon, MagnifyingGlassIcon, UserIcon } from '@heroicons/react/24/outline';
 
 function AdminUsers() {
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  useEffect(() => {
+    userService.getMyProfile().then(response => setIsSuperAdmin(response.data?.isSuperAdmin === true))
+      .catch(() => setIsSuperAdmin(false));
+  }, []);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -137,8 +142,8 @@ function AdminUsers() {
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-violet-500 focus:border-violet-500"
             >
               <option value="">All Roles</option>
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
+              <option value="USER">User</option>
+              <option value="ADMIN">Admin</option>
             </select>
             
             <select
@@ -211,15 +216,16 @@ function AdminUsers() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
+                          user.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
                         }`}>
-                          {user.role}
+                          {user.isSuperAdmin ? 'SUPER ADMIN' : user.role}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <input
                           type="checkbox"
                           checked={user.isVerified || false}
+                          disabled={user.isSuperAdmin || (user.role === 'ADMIN' && !isSuperAdmin)}
                           onChange={(e) => handleUpdateUser(user._id, { isVerified: e.target.checked })}
                           className="h-4 w-4 text-violet-600 focus:ring-violet-500 border-gray-300 rounded"
                         />
@@ -236,10 +242,18 @@ function AdminUsers() {
                         </button>
                         <button
                           onClick={() => handleDeleteUser(user._id)}
-                          className="text-red-600 hover:text-red-900"
+                          disabled={user.isSuperAdmin || (user.role === 'ADMIN' && !isSuperAdmin)}
+                          className="text-red-600 hover:text-red-900 disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           Delete
                         </button>
+                        {isSuperAdmin && !user.isSuperAdmin && <button
+                          onClick={() => {
+                            const role = user.role === 'ADMIN' ? 'USER' : 'ADMIN';
+                            if (window.confirm(`${role === 'ADMIN' ? 'Grant' : 'Remove'} admin access for ${user.email}?`)) handleUpdateUser(user._id, { role });
+                          }}
+                          className="ml-3 text-blue-700 hover:text-blue-900"
+                        >{user.role === 'ADMIN' ? 'Remove Admin' : 'Make Admin'}</button>}
                       </td>
                     </tr>
                   ))}

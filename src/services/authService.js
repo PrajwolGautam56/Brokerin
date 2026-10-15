@@ -2,32 +2,9 @@ import api from '../axiosConfig';
 import { tokenService } from './tokenService';
 import logger from '../utils/logger';
 
-// Test credentials - REMOVE IN PRODUCTION
-const TEST_ADMIN = {
-  email: 'admin@brokerin.com',
-  password: 'admin123'
-};
-
 export const authService = {
   login: async (credentials) => {
     try {
-      // For test admin account, bypass API call
-      if (credentials.email === TEST_ADMIN.email && credentials.password === TEST_ADMIN.password) {
-        const mockResponse = {
-          user: {
-            id: 'admin-123',
-            email: TEST_ADMIN.email,
-            name: 'Admin User',
-            role: 'admin'
-          },
-          token: 'test-admin-token',
-          refreshToken: 'test-refresh-token'
-        };
-        tokenService.setTokens(mockResponse.token, mockResponse.refreshToken);
-        localStorage.setItem('user', JSON.stringify(mockResponse.user));
-        return mockResponse;
-      }
-
       // Regular API login - backend expects identifier and password
       logger.log('Sending login request with:', { identifier: credentials.email, password: '***' });
       const response = await api.post('/api/auth/signin', {
@@ -289,4 +266,4 @@ export const authService = {
       return false;
     }
   }
-}; 
+};
