@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import logger from '../../utils/logger';
 import { rentalService } from '../../services/rentalService';
 import RentalDuesView from './components/RentalDuesView';
+import { useAuth } from '../../context/AuthContext';
+import { canAccess } from '../../utils/staffPermissions';
 import {
   PlusIcon,
   PencilIcon,
@@ -43,6 +45,9 @@ const getRentalPaymentSummary = (rental) => {
 };
 
 function RentalManagement() {
+  const { user } = useAuth();
+  const canPay = canAccess(user, 'payments.update');
+  const canRemind = canAccess(user, 'reminders.send');
   const [managementView, setManagementView] = useState('Monthly Summary');
   const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -572,6 +577,7 @@ function RentalManagement() {
               <p className="text-violet-100 text-lg">Manage offline rentals and monthly payments</p>
             </div>
         <button
+          disabled={!canAccess(user, 'rentals.create')}
           onClick={() => {
             resetForm();
             setShowModal(true);
@@ -643,7 +649,7 @@ function RentalManagement() {
             </button>
           ))}
         </div>
-        {managementView !== 'All Rentals' && <RentalDuesView status={managementView} onPaymentUpdated={() => fetchRentals(currentPage)} />}
+        {managementView !== 'All Rentals' && <RentalDuesView status={managementView} onPaymentUpdated={() => fetchRentals(currentPage)} canUpdatePayments={canPay} canSendReminders={canRemind} />}
         <div className={managementView === 'All Rentals' ? '' : 'hidden'}>
         {/* Modern Filters Section with Glassmorphism */}
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-6 mb-8 border border-white/50 relative overflow-hidden">
@@ -924,7 +930,7 @@ function RentalManagement() {
                             const pendingPayments = rental.payment_records.filter(
                               p => p.status === 'Pending' || p.status === 'Overdue'
                             );
-                            return pendingPayments.length > 0 ? (
+                            return pendingPayments.length > 0 && canRemind ? (
                               <button
                                 onClick={() => handleSendReminders(rentalId)}
                                 className="group flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-300"
@@ -983,7 +989,7 @@ function RentalManagement() {
                                       <td className="px-4 py-3">
                                       <div className="flex items-center gap-2 flex-wrap">
                                         {/* Send Reminder Button - Only for non-paid payments */}
-                                        {payment.status !== 'Paid' && (
+                                        {payment.status !== 'Paid' && canRemind && (
                                           <button
                                             onClick={() => handleSendReminderForMonth(rentalId, payment._id)}
                                             disabled={paymentLoading[`reminder-${payment._id}`]}
@@ -1005,7 +1011,7 @@ function RentalManagement() {
                                         )}
                                         
                                         {/* Update Button - Only for non-paid payments */}
-                                        {payment.status !== 'Paid' && (
+                                        {payment.status !== 'Paid' && canPay && (
                                           <button
                                             onClick={() => {
                                               setSelectedRental(rental);
@@ -1023,7 +1029,7 @@ function RentalManagement() {
                                         {/* Delete Button - For all payments */}
                                         <button
                                           onClick={() => handleDeletePayment(rentalId, payment._id)}
-                                          disabled={paymentLoading[payment._id]}
+                                          disabled={!canPay || paymentLoading[payment._id]}
                                             className="group flex items-center gap-1.5 bg-gradient-to-r from-red-500 to-rose-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-md hover:shadow-lg hover:scale-105 transform transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                                           title="Delete payment record"
                                         >
@@ -1061,6 +1067,7 @@ function RentalManagement() {
                     {/* Action Buttons - Modern Design */}
                     <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
                       <button
+                        disabled={!canPay}
                         onClick={() => {
                           setSelectedRental(rental);
                           setShowPaymentModal(true);
@@ -1072,6 +1079,7 @@ function RentalManagement() {
                         Record Payment
                       </button>
                       <button
+                        disabled={!canPay}
                         onClick={() => {
                           setSelectedRental(rental);
                           setShowGeneratePaymentsModal(true);
@@ -1083,6 +1091,7 @@ function RentalManagement() {
                         Generate Payments
                       </button>
                       <button
+                        disabled={!canAccess(user, 'rentals.update')}
                         onClick={() => handleEdit(rental)}
                         className="group flex items-center gap-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-300"
                         title="Edit Rental"
@@ -1091,6 +1100,7 @@ function RentalManagement() {
                         Edit
                       </button>
                       <button
+                        disabled={!canAccess(user, 'rentals.delete')}
                         onClick={() => handleDelete(rentalId)}
                         className="group flex items-center gap-2 bg-gradient-to-r from-red-500 to-rose-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-300"
                         title="Delete Rental"

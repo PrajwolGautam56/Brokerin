@@ -85,6 +85,11 @@ export function AuthProvider({ children }) {
     startTokenRefreshScheduler();
   };
 
+  const updateUser = useCallback(userData => {
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+  }, []);
+
   const logout = () => {
     stopTokenRefreshScheduler();
     authService.logout();
@@ -100,7 +105,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

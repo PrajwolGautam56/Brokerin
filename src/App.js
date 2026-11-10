@@ -30,6 +30,7 @@ import PropertyRequests from './pages/admin/PropertyRequests';
 import FurnitureRequests from './pages/admin/FurnitureRequests';
 import AdminFurniture from './pages/admin/AdminFurniture';
 import AdminUsers from './pages/admin/AdminUsers';
+import Employees from './pages/admin/Employees';
 import ContactInquiries from './pages/admin/ContactInquiries';
 import RentalManagement from './pages/admin/RentalManagement';
 import TransactionManagement from './pages/admin/TransactionManagement';
@@ -73,6 +74,7 @@ function App() {
                       <Route path="transactions" element={<TransactionManagement />} />
                       <Route path="invoices" element={<InvoiceGenerator />} />
                       <Route path="users" element={<AdminUsers />} />
+                      <Route path="employees" element={<Employees />} />
                       <Route path="enquiries" element={<ContactInquiries />} />
                       <Route path="analytics" element={<Analytics />} />
                       <Route path="settings" element={<Settings />} />

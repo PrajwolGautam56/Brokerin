@@ -21,7 +21,7 @@ export const getDueRows = (rentals, status, search = '', month = '') => {
   }).sort((a, b) => new Date(a.payment.dueDate || 0) - new Date(b.payment.dueDate || 0));
 };
 
-function RentalDuesView({ status, onPaymentUpdated }) {
+function RentalDuesView({ status, onPaymentUpdated, canUpdatePayments = true, canSendReminders = true }) {
   const [month, setMonth] = useState(() => currentRentalMonth());
   const [monthBucket, setMonthBucket] = useState('All');
   const isMonthly = status === 'Monthly Summary';
@@ -83,6 +83,7 @@ function RentalDuesView({ status, onPaymentUpdated }) {
   const profileTotal = state => profilePayments.filter(payment => payment.status === state).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
 
   const openPayment = (rental, payment, editing = false) => {
+    if (!canUpdatePayments) return;
     setError('');
     setSelected({ rental, payment, editing });
     const now = new Date();
@@ -95,6 +96,7 @@ function RentalDuesView({ status, onPaymentUpdated }) {
   };
 
   const sendReminder = async ({ rental, payment }) => {
+    if (!canSendReminders) return;
     if (!window.confirm(`Send a reminder for ${rental.customer_name}, rental ${rental.rental_id}, ${payment.month}, to ${rental.customer_email}?`)) return;
     setBusy(payment._id);
     setError('');
@@ -111,6 +113,7 @@ function RentalDuesView({ status, onPaymentUpdated }) {
 
   const markPaid = async event => {
     event.preventDefault();
+    if (!canUpdatePayments) return;
     const { rental, payment } = selected;
     setBusy(payment._id);
     setError('');
@@ -216,9 +219,9 @@ function RentalDuesView({ status, onPaymentUpdated }) {
                 <td className="p-3 whitespace-nowrap">{payment.dueDate ? new Date(payment.dueDate).toLocaleDateString() : '-'}</td>
                 <td className={`p-3 font-semibold ${payment.status === 'Overdue' ? 'text-red-700' : payment.status === 'Paid' ? 'text-green-700' : 'text-gray-700'}`}>{payment.status}</td>
                 <td className="p-3">{payment.status === 'Paid' ? <span>{payment.paidDate ? new Date(payment.paidDate).toLocaleDateString() : ''} {payment.paymentMethod}</span> : <div className="flex flex-wrap gap-2">
-                  <button disabled={!!busy || !profile?.customer_email} onClick={() => sendReminder({ rental: profile, payment })} className="border rounded-lg px-3 py-2 text-blue-700 disabled:opacity-50">Email Reminder</button>
-                  <button disabled={!!busy} onClick={() => openPayment(profile, payment)} className="bg-green-700 text-white rounded-lg px-3 py-2 disabled:opacity-50">Mark Paid</button>
-                  <button disabled={!!busy} onClick={() => openPayment(profile, payment, true)} className="border rounded-lg px-3 py-2 disabled:opacity-50">Edit Payment</button>
+                  {canSendReminders && <button disabled={!!busy || !profile?.customer_email} onClick={() => sendReminder({ rental: profile, payment })} className="border rounded-lg px-3 py-2 text-blue-700 disabled:opacity-50">Email Reminder</button>}
+                  {canUpdatePayments && <button disabled={!!busy} onClick={() => openPayment(profile, payment)} className="bg-green-700 text-white rounded-lg px-3 py-2 disabled:opacity-50">Mark Paid</button>}
+                  {canUpdatePayments && <button disabled={!!busy} onClick={() => openPayment(profile, payment, true)} className="border rounded-lg px-3 py-2 disabled:opacity-50">Edit Payment</button>}
                 </div>}</td>
               </tr>)}</tbody>
             </table></div>

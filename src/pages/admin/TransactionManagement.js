@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { canAccess } from '../../utils/staffPermissions';
 import { transactionService } from '../../services/transactionService';
 import DeliveryStatusBadge from '../../components/transactions/DeliveryStatusBadge';
 import PaymentStatusBadge from '../../components/transactions/PaymentStatusBadge';
@@ -11,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 function TransactionManagement() {
+  const { user } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -229,7 +232,7 @@ function TransactionManagement() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      {transaction.payment_status !== 'Paid' && (
+                      {transaction.payment_status !== 'Paid' && canAccess(user, 'payments.update') && (
                         <button
                           onClick={() => {
                             setSelectedTransaction(transaction);
@@ -242,6 +245,7 @@ function TransactionManagement() {
                         </button>
                       )}
                       <button
+                        disabled={!canAccess(user, 'transactions.update')}
                         onClick={() => {
                           setSelectedTransaction(transaction);
                           setShowDeliveryModal(true);
@@ -251,7 +255,7 @@ function TransactionManagement() {
                       >
                         <TruckIcon className="w-5 h-5" />
                       </button>
-                      {transaction.invoice_number && (
+                      {transaction.invoice_number && canAccess(user, 'invoices.create') && (
                         <button
                           onClick={() => handleViewInvoice(transaction._id || transaction.transaction_id)}
                           className="text-green-600 hover:text-green-700"

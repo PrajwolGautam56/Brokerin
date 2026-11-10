@@ -4,6 +4,8 @@ import { propertyService } from '../../services/propertyService';
 import { PencilIcon, TrashIcon, EyeIcon, XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import api from '../../axiosConfig';
 import LocationPicker from '../../components/admin/LocationPicker';
+import { useAuth } from '../../context/AuthContext';
+import { canAccess } from '../../utils/staffPermissions';
 
 const FormSection = ({ title, description, children }) => (
   <section className="border border-gray-200 rounded-2xl p-4 bg-gray-50 space-y-4">
@@ -18,6 +20,7 @@ const FormSection = ({ title, description, children }) => (
 );
 
 function AdminProperties() {
+  const { user } = useAuth();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -706,6 +709,7 @@ function AdminProperties() {
         <h1 className="text-2xl font-bold text-gray-900">Property Management</h1>
         <button 
           onClick={() => setIsAddModalOpen(true)}
+          disabled={!canAccess(user, 'properties.create')}
           className="bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700"
         >
           Add New Property
@@ -790,12 +794,14 @@ function AdminProperties() {
                     <div className="flex space-x-3">
                       <button
                         onClick={() => handleEdit(property)}
+                        disabled={!canAccess(user, 'properties.update')}
                         className="text-violet-600 hover:text-violet-900"
                       >
                         <PencilIcon className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => handleDelete(property._id)}
+                        disabled={!canAccess(user, 'properties.delete')}
                         className="text-red-600 hover:text-red-900"
                       >
                         <TrashIcon className="h-5 w-5" />
@@ -1786,4 +1792,4 @@ function AdminProperties() {
   );
 }
 
-export default AdminProperties; 
+export default AdminProperties;

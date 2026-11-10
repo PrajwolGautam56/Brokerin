@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { userService } from '../services/userService';
+import { adminPagePermissions, canAccess } from '../utils/staffPermissions';
 import {
   HomeIcon,
   BuildingOfficeIcon,
@@ -30,6 +32,7 @@ const navigation = [
   { name: 'Transactions', href: '/admin/transactions', icon: CreditCardIcon },
   { name: 'Invoices', href: '/admin/invoices', icon: DocumentTextIcon },
   { name: 'Users', href: '/admin/users', icon: UserGroupIcon },
+  { name: 'Employees', href: '/admin/employees', icon: UserGroupIcon },
   { name: 'Services', href: '/admin/services', icon: WrenchScrewdriverIcon },
   { name: 'Enquiries', href: '/admin/enquiries', icon: ChatBubbleLeftIcon },
   { name: 'Analytics', href: '/admin/analytics', icon: ChartBarIcon },
@@ -39,8 +42,26 @@ const navigation = [
 function AdminLayout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, user, updateUser } = useAuth();
+  const [profileReady, setProfileReady] = useState(false);
+  const [profileError, setProfileError] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  useEffect(() => {
+    let active = true;
+    setProfileReady(false);
+    setProfileError(false);
+    userService.getMyProfile().then(response => {
+      if (active) { updateUser(response.data); setProfileReady(true); }
+    }).catch(() => { if (active) setProfileError(true); });
+    return () => { active = false; };
+  }, [location.pathname, updateUser]);
+  const allowedNavigation = navigation.filter(item => item.href === '/admin/employees'
+    ? user?.isSuperAdmin : canAccess(user, adminPagePermissions[item.href]));
+  const allowedPage = location.pathname === '/admin/employees' ? user?.isSuperAdmin
+    : canAccess(user, adminPagePermissions[location.pathname.replace(/\/$/, '')]);
+  useEffect(() => {
+    if (profileReady && !allowedPage && allowedNavigation.length) navigate(allowedNavigation[0].href, { replace: true });
+  }, [profileReady, allowedPage, allowedNavigation, navigate]);
 
   const handleLogout = () => {
     logout();
@@ -62,7 +83,7 @@ function AdminLayout({ children }) {
             </button>
           </div>
           <nav className="flex-1 px-2 py-4 space-y-1">
-            {navigation.map((item) => (
+            {allowedNavigation.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
@@ -98,7 +119,7 @@ function AdminLayout({ children }) {
             </Link>
           </div>
           <nav className="flex-1 px-2 py-4 space-y-1">
-            {navigation.map((item) => (
+            {allowedNavigation.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
@@ -139,7 +160,7 @@ function AdminLayout({ children }) {
           </Link>
           <div className="w-6"></div>
         </div>
-        <main className="flex-1 p-4">{children}</main>
+        <main className="flex-1 p-4">{profileError ? <p role="alert">Unable to load your permissions. Please reload the page.</p> : !profileReady ? <p role="status">Loading permissions...</p> : allowedPage ? children : <p>No sections have been assigned to your account. Please contact the super admin.</p>}</main>
       </div>
     </div>
   );

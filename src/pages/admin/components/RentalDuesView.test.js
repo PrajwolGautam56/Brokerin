@@ -22,6 +22,17 @@ beforeAll(() => {
   };
 });
 
+test('view-only employee can open accounts but cannot edit or send reminders', async () => {
+  rentalService.getAllRentals.mockResolvedValue({ data: [rental('1', 'Alice')], pagination: { total: 1 } });
+  render(<RentalDuesView status="Overdue" onPaymentUpdated={jest.fn()} canUpdatePayments={false} canSendReminders={false} />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Alice' }));
+  const dialog = await screen.findByRole('dialog');
+  expect(within(dialog).queryByText('Mark Paid')).toBeNull();
+  expect(within(dialog).queryByText('Edit Payment')).toBeNull();
+  expect(within(dialog).queryByText('Email Reminder')).toBeNull();
+  expect(within(dialog).getByText('January 2026')).toBeTruthy();
+});
+
 test('monthly summary filters by month and remaining balance then updates after payment', async () => {
   const alice = rental('1', 'Alice');
   alice.payment_records[0].month = '2026-10';

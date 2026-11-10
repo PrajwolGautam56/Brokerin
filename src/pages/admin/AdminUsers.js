@@ -218,7 +218,7 @@ function AdminUsers() {
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           user.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
                         }`}>
-                          {user.isSuperAdmin ? 'SUPER ADMIN' : user.role}
+                          {user.isSuperAdmin ? 'SUPER ADMIN' : user.isEmployee ? 'EMPLOYEE' : user.role}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -247,7 +247,7 @@ function AdminUsers() {
                         >
                           Delete
                         </button>
-                        {isSuperAdmin && !user.isSuperAdmin && <button
+                        {isSuperAdmin && !user.isSuperAdmin && !user.isEmployee && <button
                           onClick={() => {
                             const role = user.role === 'ADMIN' ? 'USER' : 'ADMIN';
                             if (window.confirm(`${role === 'ADMIN' ? 'Grant' : 'Remove'} admin access for ${user.email}?`)) handleUpdateUser(user._id, { role });
