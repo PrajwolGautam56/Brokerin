@@ -392,6 +392,8 @@ function Navbar() {
                 isMobileMenuOpen ? 'text-violet-600 bg-violet-50' : 'text-gray-700'
               }`}
               onClick={toggleMobileMenu}
+              aria-label={isMobileMenuOpen ? 'Close navigation' : 'Open navigation'}
+              aria-expanded={isMobileMenuOpen}
             >
               {isMobileMenuOpen ? (
                 <XMarkIcon className="h-5 w-5" />
@@ -1373,4 +1375,4 @@ function Navbar() {
   );
 }
 
-export default Navbar; 
+export default Navbar;

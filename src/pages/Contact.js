@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { MapPinIcon, PhoneIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import { contactService } from '../services/contactService';
+import { businessContact, whatsappLink } from '../utils/businessContact';
+import { trackLead } from '../utils/leadTracking';
 
 function Contact() {
   const { user } = useAuth();
@@ -34,6 +36,7 @@ function Contact() {
 
     try {
       await contactService.submitContact(formData);
+      trackLead('contact_form', { section: 'contact' });
       setSuccess('Thank you for contacting us! We will get back to you soon.');
       
       // Reset form (keep user data if logged in)
@@ -80,7 +83,7 @@ function Contact() {
                 <PhoneIcon className="w-6 h-6 text-violet-500 mt-1" />
                 <div className="ml-4">
                   <h3 className="text-lg font-medium">Phone</h3>
-                  <p className="text-gray-600 mt-1">+91 83106 52049</p>
+                  <a className="text-gray-600 mt-1 block" href={`tel:${businessContact.telephone}`} onClick={() => trackLead('call', { section: 'contact' })}>{businessContact.phone}</a>
                   <p className="text-gray-600">Mon-Fri 9am to 6pm</p>
                 </div>
               </div>
@@ -89,8 +92,8 @@ function Contact() {
                 <EnvelopeIcon className="w-6 h-6 text-violet-500 mt-1" />
                 <div className="ml-4">
                   <h3 className="text-lg font-medium">Email</h3>
-                  <p className="text-gray-600 mt-1">support@brokerin.in</p>
-                  <p className="text-gray-600">We reply within 24 hours</p>
+                  <a className="text-gray-600 mt-1 block" href={`mailto:${businessContact.email}`}>{businessContact.email}</a>
+                  <a className="text-sm underline mt-2 block" href={whatsappLink()} target="_blank" rel="noopener noreferrer" onClick={() => trackLead('whatsapp', { section: 'contact' })}>Message us on WhatsApp</a>
                 </div>
               </div>
             </div>
@@ -219,4 +222,4 @@ function Contact() {
   );
 }
 
-export default Contact; 
+export default Contact;

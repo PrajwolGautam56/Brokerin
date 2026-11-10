@@ -7,6 +7,7 @@ import { XMarkIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { formatPrice, formatPriceWithSuffix } from '../utils/priceFormatter';
+import { hasListingPrice } from '../utils/listingPresentation';
 import { useFurnitureCart } from '../context/FurnitureCartContext';
 import FurnitureCartDrawer from '../components/furniture/FurnitureCartDrawer';
 import WishlistButton from '../components/wishlist/WishlistButton';
@@ -661,7 +662,7 @@ function FurnitureCard({ furniture, mode, setError, setSuccess, viewMode = 'grid
   const { addItem, items } = useFurnitureCart();
 
   const handleCardClick = () => {
-    navigate(`/furniture/${furniture._id || furniture.id}`, { state: { item: furniture } });
+    navigate(`/furniture/${furniture._id || furniture.id}?mode=${mode}`, { state: { item: furniture } });
   };
 
   // Check if furniture is available for cart (in stock)
@@ -675,6 +676,7 @@ function FurnitureCard({ furniture, mode, setError, setSuccess, viewMode = 'grid
   };
 
   const isAvailable = isInStock();
+  const hasPrice = hasListingPrice(mode === 'buy' ? furniture.price?.sell_price : furniture.price?.rent_monthly);
 
   // Check if item is already in cart
   const cartItem = items.find(item => 
@@ -694,7 +696,7 @@ function FurnitureCard({ furniture, mode, setError, setSuccess, viewMode = 'grid
 
   const handleAddToCart = async (e) => {
     e.stopPropagation();
-    if (isAddingToCart || addedToCart) return;
+    if (isAddingToCart || addedToCart || !hasPrice || !isAvailable) return;
     
     setIsAddingToCart(true);
     try {
@@ -784,7 +786,7 @@ function FurnitureCard({ furniture, mode, setError, setSuccess, viewMode = 'grid
                   <>
                     <button
                       onClick={handleAddToCart}
-                      disabled={isAddingToCart || addedToCart}
+                      disabled={isAddingToCart || addedToCart || !hasPrice}
                       className={`px-4 py-2 rounded-lg font-medium transition-all text-sm whitespace-nowrap flex items-center justify-center gap-2 ${
                         addedToCart
                           ? 'bg-green-600 text-white cursor-default'
@@ -911,7 +913,7 @@ function FurnitureCard({ furniture, mode, setError, setSuccess, viewMode = 'grid
           {isAvailable ? (
             <button
               onClick={handleAddToCart}
-              disabled={isAddingToCart || addedToCart}
+              disabled={isAddingToCart || addedToCart || !hasPrice}
               className={`w-full py-2 rounded-lg font-medium transition-all text-sm flex items-center justify-center gap-2 ${
                 addedToCart
                   ? 'bg-green-600 text-white cursor-default'

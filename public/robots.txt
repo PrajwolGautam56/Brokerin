@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /checkout
+Disallow: /reset-password
+Disallow: /user-dashboard
+Disallow: /profile
+
+Sitemap: https://www.brokerin.in/sitemap.xml

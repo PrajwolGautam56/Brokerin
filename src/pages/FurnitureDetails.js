@@ -11,6 +11,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import { furnitureService } from '../services/furnitureService';
 import { useAuth } from '../context/AuthContext';
 import { formatPrice, formatPriceWithSuffix } from '../utils/priceFormatter';
+import { hasListingPrice } from '../utils/listingPresentation';
 import { motion } from 'framer-motion';
 import { useFurnitureCart } from '../context/FurnitureCartContext';
 import WishlistButton from '../components/wishlist/WishlistButton';
@@ -95,16 +96,6 @@ function FurnitureDetails() {
     const searchParams = new URLSearchParams(location.search);
     setMode(searchParams.get('mode') || 'rent');
   }, [id, location.search, locationItem, fetchFurniture]);
-
-  useEffect(() => {
-    if (!furniture?.photos?.length) return;
-
-    const interval = setInterval(() => {
-      setActiveImage((prevIndex) => (prevIndex + 1) % furniture.photos.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [furniture?.photos?.length]);
 
   // Reset added state after 2 seconds
   useEffect(() => {
@@ -211,14 +202,15 @@ function FurnitureDetails() {
   const isAvailable = isInStock();
 
   // Check if item is already in cart
-  const currentMode = canRent ? 'rent' : 'buy';
+  const currentMode = (mode === 'buy' && canBuy) || !canRent ? 'buy' : 'rent';
+  const hasPrice = hasListingPrice(currentMode === 'rent' ? furniture.price?.rent_monthly : furniture.price?.sell_price);
   const cartItem = items.find(item => 
     (item.id === furniture._id || item.id === furniture.id) && item.mode === currentMode
   );
   const cartQuantity = cartItem?.quantity || 0;
 
   const handleAddToCart = async () => {
-    if (isAddingToCart || addedToCart) return;
+    if (isAddingToCart || addedToCart || !hasPrice || !isAvailable) return;
     
     setIsAddingToCart(true);
     try {
@@ -453,15 +445,15 @@ function FurnitureDetails() {
                 )}
                 <div className="flex items-center gap-2">
                   <CheckCircleIcon className="w-5 h-5 text-green-600" />
-                  <span className="text-sm text-gray-600">Easy Returns</span>
+                  <span className="text-sm text-gray-600">Confirm return terms before booking</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircleIcon className="w-5 h-5 text-green-600" />
-                  <span className="text-sm text-gray-600">Free Installation</span>
+                  <span className="text-sm text-gray-600">Confirm delivery and installation charges</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircleIcon className="w-5 h-5 text-green-600" />
-                  <span className="text-sm text-gray-600">No Security Deposit</span>
+                  <span className="text-sm text-gray-600">Deposit and rental period confirmed before booking</span>
                 </div>
               </div>
 
@@ -472,7 +464,7 @@ function FurnitureDetails() {
                   <div className="pt-4">
                     <button
                       onClick={handleAddToCart}
-                      disabled={isAddingToCart || addedToCart}
+                      disabled={isAddingToCart || addedToCart || !hasPrice}
                       className={`w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${
                         addedToCart
                           ? 'bg-green-600 text-white cursor-default'

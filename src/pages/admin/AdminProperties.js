@@ -6,6 +6,7 @@ import api from '../../axiosConfig';
 import LocationPicker from '../../components/admin/LocationPicker';
 import { useAuth } from '../../context/AuthContext';
 import { canAccess } from '../../utils/staffPermissions';
+import { hasListingPrice } from '../../utils/listingPresentation';
 
 const FormSection = ({ title, description, children }) => (
   <section className="border border-gray-200 rounded-2xl p-4 bg-gray-50 space-y-4">
@@ -716,6 +717,7 @@ function AdminProperties() {
         </button>
       </div>
 
+      {properties.some(property => !hasListingPrice(property.listing_type === 'Rent' ? property.price?.rent_monthly : property.price?.sell_price)) && <p role="status" className="border border-amber-200 bg-amber-50 p-3 rounded-lg mb-4 text-sm">Some listings in this view need a valid price. Customers will see “Price on request” until you update them.</p>}
       {/* Property List */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">

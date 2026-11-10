@@ -1,7 +1,10 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import logger from '../utils/logger';
 import { useState, useEffect } from 'react';
-import { formatPrice as formatPriceUtil, formatPriceWithSuffix } from '../utils/priceFormatter';
+import { formatListingPrice } from '../utils/listingPresentation';
+import { setPageMetadata } from '../utils/pageMetadata';
+import { businessContact, whatsappLink } from '../utils/businessContact';
+import { trackLead } from '../utils/leadTracking';
 import { MapPinIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import PropertyMap from '../components/property/PropertyMap';
@@ -27,21 +30,20 @@ function PropertyDetails() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    if (!property) return;
+    setPageMetadata({ title: `${property.name} | ${property.listing_type === 'Rent' ? 'For Rent' : 'For Sale'} | BrokerIn`, description: `${property.name}, ${property.location || 'Bengaluru'}. Contact BrokerIn for availability, charges and a property visit.`, image: property.photos?.length ? propertyService.getImageUrl(property.photos[0]) : undefined });
+  }, [property]);
+
+  useEffect(() => {
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
+    setActiveImage(0);
+    setImageLoadFailed(false);
+    setLoading(true);
+    setError(null);
     fetchProperty();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
-
-  useEffect(() => {
-    if (!property?.photos?.length) return;
-
-    const interval = setInterval(() => {
-      setActiveImage((prevIndex) => (prevIndex + 1) % property.photos.length);
-    }, 3000); // Change image every 3 seconds
-
-    return () => clearInterval(interval);
-  }, [property?.photos?.length]);
 
   const fetchProperty = async () => {
     try {
@@ -78,17 +80,6 @@ function PropertyDetails() {
   const handleNextImage = () => {
     if (!property.photos?.length) return;
     setActiveImage((prevIndex) => (prevIndex + 1) % property.photos.length);
-  };
-
-  const formatPrice = (price) => {
-    if (!price) return 'Price not available';
-    
-    if (property.listing_type === 'Rent') {
-      if (!price.rent_monthly) return 'Rent not specified';
-      return formatPriceWithSuffix(price.rent_monthly, '/month');
-    }
-    if (!price.sell_price) return 'Price not specified';
-    return formatPriceUtil(price.sell_price);
   };
 
   const getFullAddress = () => {
@@ -179,6 +170,7 @@ function PropertyDetails() {
       logger.log('Submitting property request:', requestData);
       
       await propertyService.submitPropertyRequest(requestData);
+      trackLead('property_enquiry', { item_id: property._id });
       
       setFormSuccess('Your request has been submitted successfully!');
       // Reset form
@@ -257,7 +249,7 @@ function PropertyDetails() {
           </div>
           
           <div className="p-6">
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between items-start gap-4 mb-4">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
                   {property.name || 'Property Name Not Available'}
@@ -269,7 +261,7 @@ function PropertyDetails() {
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold text-violet-600">
-                  {formatPrice(property.price)}
+                  {formatListingPrice(property.listing_type === 'Rent' ? property.price?.rent_monthly : property.price?.sell_price, property.listing_type === 'Rent' ? '/month' : '')}
                 </p>
                 {property.listing_type === 'Rent' && property.price?.deposit && (
                   <p className="text-gray-600">
@@ -279,6 +271,11 @@ function PropertyDetails() {
               </div>
             </div>
 
+            <div className="flex flex-wrap gap-3 mb-5">
+              <a className="brand-button" href={whatsappLink(`I would like to arrange a visit to ${property.name} (${property._id}).`)} target="_blank" rel="noopener noreferrer" onClick={() => trackLead('whatsapp', { item_id: property._id })}>Enquire / arrange a visit</a>
+              <a className="brand-text-link" href={`tel:${businessContact.telephone}`} onClick={() => trackLead('call', { item_id: property._id })}>Call our team</a>
+            </div>
+            <p className="text-sm text-gray-600 mb-5">Confirm current availability, brokerage, maintenance and any other charges with our team before booking.</p>
             {/* Property Details */}
             <div className="grid grid-cols-3 gap-4 py-6 border-y border-gray-200">
               <div className="text-center">
@@ -458,4 +455,4 @@ function PropertyDetails() {
   );
 }
 
-export default PropertyDetails; 
+export default PropertyDetails;

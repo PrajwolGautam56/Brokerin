@@ -26,8 +26,8 @@ function About() {
 
   const benefits = [
     {
-      title: "Wide Reach",
-      description: "Get exposure to a large number of visitors actively searching for properties and PG hostels."
+      title: "A Clear Listing",
+      description: "Share the photos, location, price and availability that help customers understand your property."
     },
     {
       title: "Easy-to-Use Platform",
@@ -176,34 +176,7 @@ function About() {
 
      
 
-         {/* Stats Section */}
-         <div className="bg-violet-500 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="p-6"
-            >
-              <h2 className="text-4xl font-bold mb-2">500+</h2>
-              <p className="text-lg">Happy Customers</p>
-            </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="p-6"
-            >
-              <h2 className="text-4xl font-bold mb-2">1000+</h2>
-              <p className="text-lg">Properties Listed</p>
-            </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="p-6"
-            >
-              <h2 className="text-4xl font-bold mb-2">100+</h2>
-              <p className="text-lg">Cities Covered</p>
-            </motion.div>
-          </div>
-        </div>
-      </div>
+      <section className="brand-final"><div className="brand-container"><p className="brand-eyebrow">BASED IN BENGALURU</p><h2>Meet your next step with clarity.</h2><p>Discuss your requirements, confirm the details and work with our team on a property visit or home-service enquiry.</p></div></section>
 
      
 
@@ -236,4 +209,4 @@ function About() {
   );
 }
 
-export default About; 
+export default About;

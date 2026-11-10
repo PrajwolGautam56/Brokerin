@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { CheckCircleIcon, ArrowRightIcon } from '@heroicons/react/24/solid';
 import serviceBookingService from '../services/serviceBookingService';
 import { useAuth } from '../context/AuthContext';
+import { trackLead } from '../utils/leadTracking';
+import { Link } from 'react-router-dom';
 
 function Services() {
   const { user, isAuthenticated } = useAuth();
@@ -153,6 +155,7 @@ function Services() {
         email: (user?.email || formData.email || '').trim()
       };
       await serviceBookingService.createBooking(payload);
+      trackLead('service_enquiry', { section: 'services' });
       setSuccess('Service booking submitted successfully! We will contact you soon.');
       
       // Reset form
@@ -202,6 +205,7 @@ function Services() {
       {/* Services Grid - Light Gray */}
       <div className="bg-gray-50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {!showForm && <nav aria-label="Service quote pages" className="flex flex-wrap justify-center gap-3 mb-8">{[['painting', 'Painting'], ['cleaning', 'Cleaning'], ['plumbing', 'Plumbing'], ['home-maintenance', 'Maintenance']].map(([slug, label]) => <Link key={slug} to={'/services/' + slug} className="border rounded-lg px-4 py-2 text-sm">{label} quotes →</Link>)}</nav>}
           {!showForm ? (
             /* Services Grid */
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -508,4 +512,4 @@ function Services() {
   );
 }
 
-export default Services; 
+export default Services;

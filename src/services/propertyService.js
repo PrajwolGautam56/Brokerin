@@ -3,9 +3,9 @@ import api from '../axiosConfig';
 import logger from '../utils/logger';
 
 export const propertyService = {
-  getAllProperties: async () => {
+  getAllProperties: async (filters = {}) => {
     try {
-      const response = await api.get('/api/properties');
+      const response = await api.get('/api/properties', { params: filters });
       logger.log('API Response in service:', response.data);
       return response.data;
     } catch (error) {
@@ -296,4 +296,4 @@ export const propertyService = {
       return false;
     }
   }
-}; 
+};

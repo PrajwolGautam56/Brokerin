@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { hasListingPrice } from '../../utils/listingPresentation';
 import logger from '../../utils/logger';
 import { furnitureService } from '../../services/furnitureService';
 import { stockService } from '../../services/stockService';
@@ -621,6 +622,7 @@ function AdminFurniture() {
         </div>
       </div>
 
+      {furniture.some(item => ((item.listing_type || item.listingType) !== 'Sell' && !hasListingPrice(item.price?.rent_monthly)) || ((item.listing_type || item.listingType) !== 'Rent' && !hasListingPrice(item.price?.sell_price))) && <p role="status" className="border border-amber-200 bg-amber-50 p-3 rounded-lg mb-4 text-sm">Some items in this view need rent or sale prices. Check each item's listing type and price before publishing.</p>}
       {success && (
         <div className="bg-green-50 border-2 border-green-300 text-green-800 px-4 py-3 rounded-lg mb-6 shadow-sm">
           <div className="flex items-center gap-2">

@@ -1,10 +1,12 @@
 import './index.css';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/common/Navbar';
+import SiteFrame from './components/common/SiteFrame';
 import Footer from './components/common/Footer';
 import Home from './pages/Home';
 import Properties from './pages/Properties';
 import Services from './pages/Services';
+import ServiceQuote from './pages/ServiceQuote';
 import Furniture from './pages/Furniture';
 import NotFound from './pages/NotFound';
 import ErrorBoundary from './components/common/ErrorBoundary';
@@ -54,7 +56,7 @@ function App() {
       <FurnitureCartProvider>
         <Router>
           <ErrorBoundary>
-            <div className="App">
+            <SiteFrame>
               <ScrollToTop />
               <Routes>
               {/* Admin Routes */}
@@ -128,6 +130,7 @@ function App() {
                   <Footer />
                 </>
               } />
+              <Route path="/services/:service" element={<><Navbar /><ServiceQuote /><Footer /></>} />
               <Route path="/services" element={
                 <>
                   <Navbar />
@@ -261,7 +264,7 @@ function App() {
               } />
               <Route path="*" element={<NotFound />} />
               </Routes>
-            </div>
+            </SiteFrame>
           </ErrorBoundary>
         </Router>
       </FurnitureCartProvider>
