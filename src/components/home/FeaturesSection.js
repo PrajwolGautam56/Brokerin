@@ -11,8 +11,8 @@ function FeaturesSection() {
   const features = [
     {
       icon: ShieldCheckIcon,
-      title: 'Verified Properties',
-      description: 'All properties are personally verified by our team for authenticity and quality.'
+      title: 'Listing details',
+      description: 'Review location, pricing and property details before sending an enquiry.'
     },
     {
       icon: ClockIcon,
@@ -37,7 +37,7 @@ function FeaturesSection() {
     {
       icon: HomeModernIcon,
       title: 'Wide Selection',
-      description: 'Browse through thousands of properties across different types and price ranges.'
+      description: 'Browse the available catalogue by property type, locality and budget.'
     }
   ];
 

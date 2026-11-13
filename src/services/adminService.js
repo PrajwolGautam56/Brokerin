@@ -2,6 +2,13 @@ import api from '../axiosConfig';
 import logger from '../utils/logger';
 
 export const adminService = {
+  getCompanyProfile: async () => (await api.get('/api/admin/company-profile')).data,
+  updateCompanyProfile: async (profile) => (await api.put('/api/admin/company-profile', profile)).data,
+  uploadCompanyProfilePhoto: async (file) => {
+    const formData = new FormData();
+    formData.append('profilePicture', file);
+    return (await api.post('/api/admin/company-profile/photo', formData)).data;
+  },
   // Dashboard Overview
   getDashboardOverview: async () => {
     try {

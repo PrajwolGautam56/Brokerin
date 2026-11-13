@@ -1,6 +1,23 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import api from '../axiosConfig';
+
+const fallbackProfile = {
+  description: 'BrokerIn Pvt. Ltd. is an innovative real estate platform in Bangalore, Karnataka, with a vision to make buying, selling and renting properties simpler.',
+  leaders: [
+    { name: 'Santhosh Srinivas', title: 'Founder & CEO', description: '', image: '/owner.JPG' },
+    { name: 'Gopi krishna D', title: 'Operations Manager', description: '', image: '/gopi-krishna.jpg' }
+  ],
+  socialLinks: {}
+};
 
 function About() {
+  const [companyProfile, setCompanyProfile] = useState(fallbackProfile);
+  useEffect(() => {
+    api.get('/api/company-profile').then((response) => {
+      if (response.data?.success && response.data.data) setCompanyProfile(response.data.data);
+    }).catch(() => {});
+  }, []);
   const visionPoints = [
     {
       title: "Hassle-Free Transactions",
@@ -52,8 +69,7 @@ function About() {
             />
             <h1 className="text-4xl font-bold text-gray-900 mb-6">About BROKERIN</h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              BrokerIn Pvt. Ltd. is an innovative real estate platform in Bangalore, Karnataka, 
-              with a vision to transform into simplest way for people to buy, sell and rent properties.
+              {companyProfile.description}
             </p>
           </div>
         </div>
@@ -130,28 +146,7 @@ function About() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12">Our Leadership Team</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {[
-              {
-                name: "Santhosh Srinivas",
-                role: "Founder & CEO",
-                image: "/owner.JPG"
-              },
-              {
-                name: "Gopi krishna D",
-                role: "Operations Manager",
-                image: "/gopi-krishna.jpg"
-              }
-              /* {
-                name: "Roshan Vennavalli",
-                role: "Managing Director",
-                image: "/images/blank-profile.png"
-              },
-              {
-                name: "Bhavani S",
-                role: "Accounts",
-                image: "/images/blank-profile.png"
-              } */
-            ].map((member, index) => (
+            {companyProfile.leaders.map((member, index) => (
               <motion.div
                 key={index}
                 whileHover={{ y: -5 }}
@@ -159,18 +154,20 @@ function About() {
               >
                 <div className="bg-gray-100 h-64 flex items-center justify-center p-4">
                   <img 
-                    src={member.image}
+                    src={member.image || '/images/blank-profile.png'}
                     alt={member.name}
                     className="max-w-xs max-h-full w-auto h-auto object-contain rounded-lg"
                   />
                 </div>
                 <div className="p-6 text-center">
                   <h3 className="font-semibold text-lg mb-1">{member.name}</h3>
-                  <p className="text-gray-600">{member.role}</p>
+                  <p className="text-gray-600">{member.title}</p>
+                  {member.description && <p className="text-sm text-gray-500 mt-3">{member.description}</p>}
                 </div>
               </motion.div>
             ))}
           </div>
+          {Object.entries(companyProfile.socialLinks || {}).filter(([, link]) => link).length > 0 && <div className="flex flex-wrap justify-center gap-5 mt-8 text-sm font-medium text-violet-700">{Object.entries(companyProfile.socialLinks).filter(([, link]) => link).map(([name, link]) => <a key={name} href={link} target="_blank" rel="noopener noreferrer" className="capitalize hover:underline">{name}</a>)}</div>}
         </div>
       </div>
 

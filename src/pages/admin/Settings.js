@@ -9,6 +9,7 @@ const tabs = [
   { id: 'notifications', name: 'Notifications' },
   { id: 'userManagement', name: 'User Management' },
   { id: 'content', name: 'Content Management' },
+  { id: 'companyProfile', name: 'Company Profile' },
   { id: 'analytics', name: 'Analytics & Tracking' },
 ];
 
@@ -40,6 +41,8 @@ function Settings() {
   const [error, setError] = useState(null);
   const [settings, setSettings] = useState(null);
   const [testEmailResult, setTestEmailResult] = useState(null);
+  const [companyProfile, setCompanyProfile] = useState({ description: '', leaders: [], socialLinks: {} });
+  const [uploadingLeader, setUploadingLeader] = useState(null);
   const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
@@ -94,6 +97,12 @@ function Settings() {
   useEffect(() => {
     fetchSettings();
   }, [fetchSettings]);
+
+  useEffect(() => {
+    adminService.getCompanyProfile().then((response) => {
+      if (response.success) setCompanyProfile(response.data);
+    }).catch((profileError) => logger.error('Error fetching company profile:', profileError));
+  }, []);
 
   const handleSettingChange = (section, field, value) => {
     setSettings(prev => ({
@@ -158,6 +167,52 @@ function Settings() {
       toast.error(error.message || 'Failed to send test email');
     }
   };
+
+  const saveCompanyProfile = async () => {
+    try {
+      setSaving(true);
+      const response = await adminService.updateCompanyProfile(companyProfile);
+      if (!response.success) throw new Error(response.message || 'Failed to save company profile');
+      setCompanyProfile(response.data);
+      toast.success('Company profile saved successfully');
+    } catch (profileError) {
+      toast.error(profileError.message || 'Failed to save company profile');
+    } finally { setSaving(false); }
+  };
+
+  const updateLeader = (index, field, value) => setCompanyProfile((current) => ({
+    ...current, leaders: current.leaders.map((leader, leaderIndex) => leaderIndex === index ? { ...leader, [field]: value } : leader)
+  }));
+
+  const uploadLeaderPhoto = async (index, file) => {
+    if (!file) return;
+    try {
+      setUploadingLeader(index);
+      const response = await adminService.uploadCompanyProfilePhoto(file);
+      if (!response.success) throw new Error(response.message || 'Upload failed');
+      updateLeader(index, 'image', response.data.url);
+      toast.success('Photo uploaded. Save the profile to publish it.');
+    } catch (uploadError) { toast.error(uploadError.message || 'Photo upload failed'); }
+    finally { setUploadingLeader(null); }
+  };
+
+  const renderCompanyProfile = () => (
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow-sm p-6 space-y-4">
+        <div><h3 className="text-lg font-medium text-gray-900">Public Company Profile</h3><p className="text-sm text-gray-500 mt-1">This information is shown on the public About page.</p></div>
+        <div><label className="block text-sm font-medium text-gray-700 mb-2">Company description</label><textarea rows={5} value={companyProfile.description || ''} onChange={(e) => setCompanyProfile((current) => ({ ...current, description: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500" /></div>
+      </div>
+      <div className="bg-white rounded-lg shadow-sm p-6 space-y-5">
+        <div className="flex items-center justify-between"><div><h3 className="text-lg font-medium text-gray-900">Leadership</h3><p className="text-sm text-gray-500">Add CEO, manager or other team members.</p></div><button type="button" onClick={() => setCompanyProfile((current) => ({ ...current, leaders: [...current.leaders, { name: '', title: '', description: '', image: '' }] }))} className="px-3 py-2 text-sm bg-violet-600 text-white rounded-md">Add member</button></div>
+        {companyProfile.leaders.map((leader, index) => <div key={index} className="border border-gray-200 rounded-lg p-4 grid md:grid-cols-[130px_1fr] gap-4">
+          <div><img src={leader.image || '/images/blank-profile.png'} alt="Profile preview" className="h-28 w-28 object-cover rounded-lg bg-gray-100" onError={(event) => { event.currentTarget.src = '/images/blank-profile.png'; }} /><label className="mt-2 block text-xs font-medium text-gray-600">Photo<input type="file" accept="image/*" className="mt-1 block w-full text-xs" onChange={(e) => uploadLeaderPhoto(index, e.target.files?.[0])} disabled={uploadingLeader === index} /></label></div>
+          <div className="grid gap-3"><input value={leader.name || ''} onChange={(e) => updateLeader(index, 'name', e.target.value)} placeholder="Name" className="px-3 py-2 border border-gray-300 rounded-md" /><input value={leader.title || ''} onChange={(e) => updateLeader(index, 'title', e.target.value)} placeholder="Title, e.g. Founder & CEO" className="px-3 py-2 border border-gray-300 rounded-md" /><textarea rows={3} value={leader.description || ''} onChange={(e) => updateLeader(index, 'description', e.target.value)} placeholder="Short description" className="px-3 py-2 border border-gray-300 rounded-md" /><input value={leader.image || ''} onChange={(e) => updateLeader(index, 'image', e.target.value)} placeholder="Photo URL (or upload above)" className="px-3 py-2 border border-gray-300 rounded-md" /><button type="button" onClick={() => setCompanyProfile((current) => ({ ...current, leaders: current.leaders.filter((_, leaderIndex) => leaderIndex !== index) }))} className="justify-self-start text-sm text-red-600">Remove member</button></div>
+        </div>)}
+      </div>
+      <div className="bg-white rounded-lg shadow-sm p-6"><h3 className="text-lg font-medium text-gray-900 mb-4">Social media links</h3><div className="grid md:grid-cols-2 gap-4">{['facebook', 'instagram', 'linkedin', 'youtube', 'whatsapp'].map((name) => <label key={name} className="text-sm font-medium text-gray-700 capitalize">{name}<input type="url" value={companyProfile.socialLinks?.[name] || ''} onChange={(e) => setCompanyProfile((current) => ({ ...current, socialLinks: { ...current.socialLinks, [name]: e.target.value } }))} placeholder={`https://${name}.com/...`} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md" /></label>)}</div></div>
+      <button onClick={saveCompanyProfile} disabled={saving} className="px-6 py-2 bg-violet-600 text-white rounded-md disabled:opacity-50">{saving ? 'Saving...' : 'Save Company Profile'}</button>
+    </div>
+  );
 
   const renderBusinessSettings = () => {
     if (!settings?.business) {
@@ -503,6 +558,8 @@ function Settings() {
         return renderUserManagementSettings();
       case 'content':
         return renderContentSettings();
+      case 'companyProfile':
+        return renderCompanyProfile();
       case 'analytics':
         return renderAnalyticsSettings();
       default:
