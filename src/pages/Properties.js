@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import PropertyCard from '../components/property/PropertyCard';
 import PropertiesMap from '../components/property/PropertiesMap';
 import { propertyService } from '../services/propertyService';
+import { ArrowsUpDownIcon, BuildingOffice2Icon, CalendarDaysIcon, CurrencyRupeeIcon, HomeIcon, MagnifyingGlassIcon, MapPinIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
 export default function Properties() {
   const [params, setParams] = useSearchParams();
@@ -56,16 +57,17 @@ export default function Properties() {
     <main className="brand-container pt-8">
     <form onSubmit={apply} key={queryString} className="property-filter-panel mb-7">
       <div className="property-filter-heading"><div><p className="brand-eyebrow">REFINE YOUR SEARCH</p><h2>Search the property catalogue</h2></div><span>{type === 'rent' ? 'Rental homes' : 'Homes for sale'}</span></div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <label>Looking to<select name="type" value={draftType} onChange={event => { setDraftType(event.target.value); event.target.form.elements.priceRange.value = ""; }}><option value="rent">Rent</option><option value="buy">Buy</option></select></label>
-        <label>Locality<input name="location" defaultValue={params.get('location') || ''} placeholder="Locality or society" /></label>
-        <label>Property type<select name="buildingType" defaultValue={params.get('buildingType') || ''}><option value="">Any type</option>{['Apartment','Independent House','Villa','Pent House','Plot'].map(item => <option key={item}>{item}</option>)}</select></label>
-        <label>Bedrooms<select name="bhk" defaultValue={params.get('bhk') || ''}><option value="">Any BHK</option>{[1,2,3,4,5].map(value => <option key={value} value={value}>{value === 5 ? '5+' : value} BHK</option>)}</select></label>
-        <label>Budget ({draftType === 'rent' ? 'monthly' : 'purchase'})<select name="priceRange" defaultValue={params.get('priceRange') || ''}><option value="">Any budget</option>{(draftType === 'rent' ? [['0-15000','Under ₹15,000'],['15000-30000','₹15,000–30,000'],['30000-60000','₹30,000–60,000'],['60000','₹60,000+']] : [['0-5000000','Under ₹50 lakh'],['5000000-10000000','₹50 lakh–1 crore'],['10000000','₹1 crore+']]).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-        <label>Furnishing<select name="furnishing" defaultValue={params.get('furnishing') || ''}><option value="">Any furnishing</option><option value="Full">Fully furnished</option><option value="Semi">Semi furnished</option><option value="None">Unfurnished</option></select></label>
-        <label>Availability<select name="availability" defaultValue={params.get('availability') || ''}><option value="">Any availability</option>{['Immediate', 'Within 15 Days', 'Within 30 Days', 'After 30 Days'].map(value => <option key={value}>{value}</option>)}</select></label>
-        <label>Sort<select name="sortBy" defaultValue={params.get('sortBy') || 'newest'}><option value="newest">Latest listings</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></label>
-        <div className="property-filter-actions"><button className="brand-button" type="submit">Search properties</button><button type="button" onClick={() => setParams({ type })}>Reset</button></div>
+      <input type="hidden" name="type" value={draftType} />
+      <div className="property-filter-mode"><span>Looking to</span><div role="group" aria-label="Listing type"><button type="button" className={draftType === 'rent' ? 'active' : ''} onClick={() => setDraftType('rent')}>Rent a home</button><button type="button" className={draftType === 'buy' ? 'active' : ''} onClick={() => setDraftType('buy')}>Buy a home</button></div></div>
+      <div className="property-filter-grid">
+        <label className="property-filter-control property-filter-location"><span><MapPinIcon />Location</span><input name="location" defaultValue={params.get('location') || ''} placeholder="Search locality or society" /></label>
+        <label className="property-filter-control"><span><BuildingOffice2Icon />Property type</span><select name="buildingType" defaultValue={params.get('buildingType') || ''}><option value="">Any type</option>{['Apartment','Independent House','Villa','Pent House','Plot'].map(item => <option key={item}>{item}</option>)}</select></label>
+        <label className="property-filter-control"><span><HomeIcon />Bedrooms</span><select name="bhk" defaultValue={params.get('bhk') || ''}><option value="">Any BHK</option>{[1,2,3,4,5].map(value => <option key={value} value={value}>{value === 5 ? '5+' : value} BHK</option>)}</select></label>
+        <label className="property-filter-control"><span><CurrencyRupeeIcon />Budget {draftType === 'rent' ? '(monthly)' : ''}</span><select name="priceRange" defaultValue={params.get('priceRange') || ''}><option value="">Any budget</option>{(draftType === 'rent' ? [['0-15000','Under ₹15,000'],['15000-30000','₹15,000–30,000'],['30000-60000','₹30,000–60,000'],['60000','₹60,000+']] : [['0-5000000','Under ₹50 lakh'],['5000000-10000000','₹50 lakh–1 crore'],['10000000','₹1 crore+']]).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        <label className="property-filter-control"><span><SparklesIcon />Furnishing</span><select name="furnishing" defaultValue={params.get('furnishing') || ''}><option value="">Any furnishing</option><option value="Full">Fully furnished</option><option value="Semi">Semi furnished</option><option value="None">Unfurnished</option></select></label>
+        <label className="property-filter-control"><span><CalendarDaysIcon />Availability</span><select name="availability" defaultValue={params.get('availability') || ''}><option value="">Any availability</option>{['Immediate', 'Within 15 Days', 'Within 30 Days', 'After 30 Days'].map(value => <option key={value}>{value}</option>)}</select></label>
+        <label className="property-filter-control"><span><ArrowsUpDownIcon />Sort by</span><select name="sortBy" defaultValue={params.get('sortBy') || 'newest'}><option value="newest">Latest listings</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></label>
+        <div className="property-filter-actions"><button className="brand-button" type="submit"><MagnifyingGlassIcon />Search properties</button><button type="button" onClick={() => setParams({ type })}>Clear filters</button></div>
       </div>
     </form>
     <div className="flex flex-wrap justify-between gap-4 items-center mb-5"><p role="status">{loading ? 'Finding homes...' : error ? 'Search unavailable' : pagination.total + ' properties for ' + (type === 'rent' ? 'rent' : 'sale')}</p><button onClick={() => setMap(!map)} className="border px-4 py-2 rounded text-sm">{map ? 'Show list' : 'Show page on map'}</button></div>
