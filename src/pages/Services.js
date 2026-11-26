@@ -188,24 +188,25 @@ function Services() {
   return (
     <div className="min-h-screen">
       {/* Header - White */}
-      <div className="bg-white pt-20 pb-12">
+      <div className="service-page-hero pt-20 pb-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero Section */}
-          <div className="text-center mb-16">
+          <div className="text-center max-w-3xl mx-auto">
+            <p className="brand-eyebrow">HOME SERVICES</p>
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
               Professional Home Services
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Select a service category to get started
+              Select a service category, review the starting scope, and request a time that works for you.
             </p>
           </div>
         </div>
       </div>
 
       {/* Services Grid - Light Gray */}
-      <div className="bg-gray-50 py-12">
+      <div className="bg-gray-50 py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {!showForm && <nav aria-label="Service quote pages" className="flex flex-wrap justify-center gap-3 mb-8">{[['painting', 'Painting'], ['cleaning', 'Cleaning'], ['plumbing', 'Plumbing'], ['home-maintenance', 'Maintenance']].map(([slug, label]) => <Link key={slug} to={'/services/' + slug} className="border rounded-lg px-4 py-2 text-sm">{label} quotes →</Link>)}</nav>}
+          {!showForm && <nav aria-label="Service quote pages" className="service-quick-links">{[['painting', 'Painting'], ['cleaning', 'Cleaning'], ['plumbing', 'Plumbing'], ['home-maintenance', 'Maintenance']].map(([slug, label]) => <Link key={slug} to={'/services/' + slug}>{label} quotes <span>→</span></Link>)}</nav>}
           {!showForm ? (
             /* Services Grid */
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -213,12 +214,12 @@ function Services() {
                 <motion.div
                   key={service.id}
                   whileHover={{ y: -5 }}
-                  className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col justify-between"
+                  className="service-category-card bg-white rounded-xl shadow-lg overflow-hidden flex flex-col justify-between"
                 >
                   <img
                     src={service.image}
                     alt={service.category}
-                    className="w-full h-48 object-cover"
+                    className="w-full h-56 object-cover"
                   />
                   <div className="p-6 flex-grow">
                     <div className="flex items-center gap-4 mb-6">
